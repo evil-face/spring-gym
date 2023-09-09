@@ -11,7 +11,7 @@ import java.util.UUID;
 @Service
 public class UserService {
     private final UserDAO userDAO;
-    private static final int passwordLength = 10;
+    private static final int PASSWORD_LENGTH = 10;
 
     @Autowired
     public UserService(UserDAO userDAO) {
@@ -39,6 +39,6 @@ public class UserService {
     }
 
     public String generatePassword() {
-        return RandomStringUtils.randomAlphanumeric(passwordLength);
+        return RandomStringUtils.randomAlphanumeric(PASSWORD_LENGTH);
     }
 }
