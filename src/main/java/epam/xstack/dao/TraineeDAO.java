@@ -23,7 +23,7 @@ public class TraineeDAO {
 
     public List<Trainee> findAll() {
         return mapRepository.findAll(Trainee.class.getSimpleName()).stream()
-                .map(entity -> (Trainee) entity)
+                .map(Trainee.class::cast)
                 .toList();
     }
 
