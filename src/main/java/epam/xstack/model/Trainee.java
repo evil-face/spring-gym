@@ -8,8 +8,8 @@ import java.util.Objects;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = Trainee.class, name = "Trainee"),
-        @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
+    @JsonSubTypes.Type(value = Trainee.class, name = "Trainee"),
+    @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
 })
 public final class Trainee extends User {
     private Date dateOfBirth;
@@ -44,9 +44,15 @@ public final class Trainee extends User {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
         Trainee trainee = (Trainee) o;
         return Objects.equals(dateOfBirth, trainee.dateOfBirth) && Objects.equals(address, trainee.address);
     }

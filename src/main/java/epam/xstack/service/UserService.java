@@ -1,7 +1,6 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.UserDAO;
-import epam.xstack.model.User;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -9,7 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 @Service
-public class UserService {
+public final class UserService {
     private final UserDAO userDAO;
     private static final int PASSWORD_LENGTH = 10;
 

@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = Trainee.class, name = "Trainee"),
-        @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
+    @JsonSubTypes.Type(value = Trainee.class, name = "Trainee"),
+    @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
 })
 public class Trainer extends User {
     public Trainer(String id, String firstName, String lastName, String username, String password, boolean isActive) {

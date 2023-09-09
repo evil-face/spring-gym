@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class TraineeDAO {
+public final class TraineeDAO {
     private MapRepository mapRepository;
 
     @Autowired

@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Component
-public class MapRepositoryImpl implements MapRepository {
+public final class MapRepositoryImpl implements MapRepository {
     private Map<String, List<GymEntity>> storage;
     private final String storageFilePath;
 
@@ -81,6 +81,7 @@ public class MapRepositoryImpl implements MapRepository {
         if (oldEntity.isPresent()) {
             switch (entityType) {
                 case "Trainee" -> updateTrainee(oldEntity.get(), entity);
+                default -> throw new IllegalStateException("No such entity type.");
             }
         }
     }

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class TraineeService {
+public final class TraineeService {
     private final TraineeDAO traineeDAO;
     private final UserService userService;
 

@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map;
 
 public final class FileReader {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
-        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        OBJECT_MAPPER.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
     }
 
     private FileReader() {
@@ -30,9 +30,9 @@ public final class FileReader {
 
             if (diskStorage.length() != 0) {
                 try {
-                    storage = objectMapper.readValue(
+                    storage = OBJECT_MAPPER.readValue(
                             diskStorage,
-                            new TypeReference<Map<String, List<GymEntity>>>() { } );
+                            new TypeReference<Map<String, List<GymEntity>>>() { });
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -45,7 +45,7 @@ public final class FileReader {
     public static void writeStorage(Map<String, List<GymEntity>> storage, String storageFilePath) {
         if (Files.exists(Paths.get(storageFilePath))) {
             try {
-                objectMapper.writeValue(new File(storageFilePath), storage);
+                OBJECT_MAPPER.writeValue(new File(storageFilePath), storage);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

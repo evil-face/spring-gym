@@ -31,66 +31,81 @@ public class User implements GymEntity {
     public User() {
     }
 
-    public String getId() {
+    public final String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public final void setId(String id) {
         this.id = id;
     }
 
     @NonNull
-    public String getFirstName() {
+    public final String getFirstName() {
         return firstName;
     }
 
-    public void setFirstName(@NonNull String firstName) {
+    public final void setFirstName(@NonNull String firstName) {
         this.firstName = firstName;
     }
 
     @NonNull
-    public String getLastName() {
+    public final String getLastName() {
         return lastName;
     }
 
-    public void setLastName(@NonNull String lastName) {
+    public final void setLastName(@NonNull String lastName) {
         this.lastName = lastName;
     }
 
     @NonNull
-    public String getUsername() {
+    public final String getUsername() {
         return username;
     }
 
-    public void setUsername(@NonNull String username) {
+    public final void setUsername(@NonNull String username) {
         this.username = username;
     }
 
     @NonNull
-    public String getPassword() {
+    public final String getPassword() {
         return password;
     }
 
-    public void setPassword(@NonNull String password) {
+    public final void setPassword(@NonNull String password) {
         this.password = password;
     }
 
-    public boolean isActive() {
+    public final boolean isActive() {
         return isActive;
     }
 
-    public void setActive(boolean active) {
+    public final void setActive(boolean active) {
         isActive = active;
     }
 
+    /**
+     * Override this in child.
+     */
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         User user = (User) o;
-        return id == user.id && isActive == user.isActive && Objects.equals(firstName, user.firstName) && Objects.equals(lastName, user.lastName) && Objects.equals(username, user.username) && Objects.equals(password, user.password);
+        return id == user.id
+                && isActive == user.isActive
+                && Objects.equals(firstName, user.firstName)
+                && Objects.equals(lastName, user.lastName)
+                && Objects.equals(username, user.username)
+                && Objects.equals(password, user.password);
     }
 
+    /**
+     * Override this in child.
+     */
     @Override
     public int hashCode() {
         return Objects.hash(id, firstName, lastName, username, password, isActive);
