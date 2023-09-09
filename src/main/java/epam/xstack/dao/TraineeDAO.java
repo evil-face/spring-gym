@@ -10,7 +10,7 @@ import java.util.Optional;
 
 @Component
 public final class TraineeDAO {
-    private MapRepository mapRepository;
+    private final MapRepository mapRepository;
 
     @Autowired
     public TraineeDAO(MapRepository mapRepository) {

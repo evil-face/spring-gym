@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public final class UserDAO {
-    private MapRepository mapRepository;
+    private final MapRepository mapRepository;
 
     @Autowired
     public UserDAO(MapRepository mapRepository) {
