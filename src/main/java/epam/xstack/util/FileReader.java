@@ -1,5 +1,6 @@
 package epam.xstack.util;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import epam.xstack.model.GymEntity;
