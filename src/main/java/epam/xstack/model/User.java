@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class User implements GymEntity {
     @NonNull
-    private long id;
+    private String id;
     @NonNull
     private String firstName;
     @NonNull
@@ -18,7 +18,7 @@ public class User implements GymEntity {
     @NonNull
     private boolean isActive;
 
-    public User(@NonNull long id, @NonNull String firstName, @NonNull String lastName,
+    public User(@NonNull String id, @NonNull String firstName, @NonNull String lastName,
                 @NonNull String username, @NonNull String password, boolean isActive) {
         this.id = id;
         this.firstName = firstName;
@@ -31,11 +31,11 @@ public class User implements GymEntity {
     public User() {
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 

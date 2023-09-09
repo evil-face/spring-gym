@@ -22,7 +22,7 @@ public class TraineeService {
 
     public Trainee createTrainee(String firstName, String lastName,
                                  boolean isActive, Date dateOfBirth, String address) {
-        long id = userService.generateId();
+        String id = userService.generateId();
         String username = userService.generateUsername(firstName, lastName);
         String password = userService.generatePassword();
 
@@ -38,7 +38,7 @@ public class TraineeService {
         return traineeDAO.findAll();
     }
 
-    public Optional<Trainee> findById(long id) {
+    public Optional<Trainee> findById(String id) {
         return traineeDAO.findById(id);
     }
 

@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface MapRepository {
     void save(GymEntity entity);
     List<GymEntity> findAll(String entityType);
-    Optional<GymEntity> findById(String entityType, long id);
+    Optional<GymEntity> findById(String entityType, String id);
     boolean existsByUsername(String username);
     void update(GymEntity entity);
     void delete(GymEntity entity);

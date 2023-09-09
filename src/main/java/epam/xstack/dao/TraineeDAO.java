@@ -27,9 +27,9 @@ public class TraineeDAO {
                 .toList();
     }
 
-    public Optional<Trainee> findById(long id) {
+    public Optional<Trainee> findById(String id) {
         return mapRepository.findById(Trainee.class.getSimpleName(), id)
-                .map(entity -> (Trainee) entity);
+                .map(Trainee.class::cast);
     }
 
     public void update(Trainee trainee) {

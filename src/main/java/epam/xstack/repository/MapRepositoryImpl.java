@@ -51,12 +51,12 @@ public class MapRepositoryImpl implements MapRepository {
     }
 
     @Override
-    public Optional<GymEntity> findById(String entityType, long id) {
+    public Optional<GymEntity> findById(String entityType, String id) {
         List<GymEntity> list = storage.get(entityType);
 
         if (list != null) {
             return list.stream()
-                    .filter(entity -> entity.getId() == id)
+                    .filter(entity -> entity.getId().equals(id))
                     .findFirst();
         }
 
@@ -67,15 +67,15 @@ public class MapRepositoryImpl implements MapRepository {
     public boolean existsByUsername(String username) {
         return storage.values().stream()
                 .flatMap(Collection::stream)
-                .anyMatch(entity -> entity instanceof User
-                        && ((User) entity).getUsername().equals(username));
+                .anyMatch(entity -> entity instanceof User user
+                        && user.getUsername().equals(username));
     }
 
     @Override
     public void update(GymEntity entity) {
         String entityType = entity.getClass().getSimpleName();
 
-        long id = entity.getId();
+        String id = entity.getId();
         Optional<GymEntity> oldEntity = findById(entityType, id);
 
         if (oldEntity.isPresent()) {

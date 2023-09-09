@@ -6,6 +6,8 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 public class UserService {
     private final UserDAO userDAO;
@@ -16,8 +18,8 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
-    public long generateId() {
-        return userDAO.getLastId() + 1;
+    public String generateId() {
+        return UUID.randomUUID().toString();
     }
 
     public String generateUsername(String firstName, String lastName) {

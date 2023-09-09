@@ -9,7 +9,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
 })
 public class Trainer extends User {
-    public Trainer(long id, String firstName, String lastName, String username, String password, boolean isActive) {
+    public Trainer(String id, String firstName, String lastName, String username, String password, boolean isActive) {
         super(id, firstName, lastName, username, password, isActive);
     }
 }
