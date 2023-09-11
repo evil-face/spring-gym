@@ -2,6 +2,8 @@ package epam.xstack.dao;
 
 import epam.xstack.model.Trainee;
 import epam.xstack.repository.MapRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +13,8 @@ import java.util.Optional;
 @Component
 public final class TraineeDAO {
     private final MapRepository mapRepository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TraineeDAO.class);
+
 
     @Autowired
     public TraineeDAO(MapRepository mapRepository) {
@@ -28,8 +32,14 @@ public final class TraineeDAO {
     }
 
     public Optional<Trainee> findById(String id) {
-        return mapRepository.findById(Trainee.class.getSimpleName(), id)
+        Optional<Trainee> trainee = mapRepository.findById(Trainee.class.getSimpleName(), id)
                 .map(Trainee.class::cast);
+
+        if (trainee.isEmpty()) {
+            LOGGER.warn("No records found for id " + id);
+        }
+
+        return trainee;
     }
 
     public void update(Trainee trainee) {

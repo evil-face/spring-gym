@@ -1,11 +1,12 @@
 package epam.xstack.service;
 
-import epam.xstack.dao.TrainerDAO;
 import epam.xstack.dao.TrainingDAO;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,8 @@ import java.util.UUID;
 @Service
 public final class TrainingService {
     private final TrainingDAO trainingDAO;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrainingService.class);
+
     @Autowired
     public TrainingService(TrainingDAO trainingDAO) {
         this.trainingDAO = trainingDAO;
@@ -29,6 +32,9 @@ public final class TrainingService {
         Training training = new Training(id, trainee, trainer, name, type, date, duration);
 
         trainingDAO.save(training);
+        LOGGER.info("Saved new training with id " + training.getId() + " to the DB");
+
+
         return training;
     }
 

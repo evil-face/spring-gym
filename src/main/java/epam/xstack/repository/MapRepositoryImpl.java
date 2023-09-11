@@ -4,6 +4,8 @@ import epam.xstack.model.GymEntity;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.User;
 import epam.xstack.util.FileReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,7 @@ import java.util.Optional;
 public final class MapRepositoryImpl implements MapRepository {
     private Map<String, List<GymEntity>> storage;
     private final String storageFilePath;
+    private static final Logger LOGGER = LoggerFactory.getLogger(MapRepositoryImpl.class);
 
     public MapRepositoryImpl(Map<String, List<GymEntity>> storage,
                              @Value("${storagefile.path}") String storageFilePath) {

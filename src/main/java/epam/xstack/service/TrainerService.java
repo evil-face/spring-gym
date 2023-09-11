@@ -3,6 +3,8 @@ package epam.xstack.service;
 import epam.xstack.dao.TrainerDAO;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import java.util.Optional;
 public final class TrainerService {
     private final TrainerDAO trainerDAO;
     private final UserService userService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
     public TrainerService(TrainerDAO trainerDAO, UserService userService) {
@@ -30,6 +33,9 @@ public final class TrainerService {
                 username, password, true, specialization);
 
         trainerDAO.save(trainer);
+        LOGGER.info("Saved new trainer with id " + trainer.getId() + " to the DB");
+
+
         return trainer;
     }
 
@@ -43,5 +49,6 @@ public final class TrainerService {
 
     public void update(Trainer trainer) {
         trainerDAO.update(trainer);
+        LOGGER.info("Updated trainer with id " + trainer.getId() + " in the DB");
     }
 }
