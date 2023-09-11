@@ -22,7 +22,15 @@ public final class UserService {
     }
 
     public String generateUsername(String firstName, String lastName) {
-        String newUsername = firstName.toLowerCase() + "." + lastName.toLowerCase();
+        String clearedFirstName = firstName.trim().toLowerCase()
+                .replace(" ", "")
+                .replaceAll("\\d", "");
+
+        String clearedLastName = lastName.trim().toLowerCase()
+                .replace(" ", "")
+                .replaceAll("\\d", "");
+
+        String newUsername = clearedFirstName + "." + clearedLastName;
 
         while (userDAO.existsByUsername(newUsername)) {
             String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=[0-9])");
