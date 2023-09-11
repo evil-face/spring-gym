@@ -101,7 +101,7 @@ public class User implements GymEntity {
             return false;
         }
         User user = (User) o;
-        return id == user.id
+        return id.equals(user.id)
                 && isActive == user.isActive
                 && Objects.equals(firstName, user.firstName)
                 && Objects.equals(lastName, user.lastName)
