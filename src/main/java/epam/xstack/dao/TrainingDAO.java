@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class TrainingDAO {
+public final class TrainingDAO {
     private final MapRepository mapRepository;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerDAO.class);
 

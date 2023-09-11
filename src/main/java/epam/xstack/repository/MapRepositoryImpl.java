@@ -82,9 +82,10 @@ public final class MapRepositoryImpl implements MapRepository {
         Optional<GymEntity> oldEntity = findById(entityType, id);
 
         if (oldEntity.isPresent()) {
-            switch (entityType) {
-                case "Trainee" -> updateTrainee(oldEntity.get(), entity);
-                default -> throw new IllegalStateException("No such entity type.");
+            if (entityType.equals("Trainee")) {
+                updateTrainee(oldEntity.get(), entity);
+            } else {
+                LOGGER.error("No such entity type for update exists: " + entityType);
             }
         }
     }

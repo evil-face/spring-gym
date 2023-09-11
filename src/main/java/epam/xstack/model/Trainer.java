@@ -2,7 +2,7 @@ package epam.xstack.model;
 
 import java.util.Objects;
 
-public class Trainer extends User {
+public final class Trainer extends User {
     private TrainingType specialization;
 
     public Trainer(String id, String firstName, String lastName,
