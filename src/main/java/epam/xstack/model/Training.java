@@ -93,7 +93,13 @@ public final class Training implements GymEntity {
             return false;
         }
         Training training = (Training) o;
-        return trainingDuration == training.trainingDuration && Objects.equals(id, training.id) && Objects.equals(trainee, training.trainee) && Objects.equals(trainer, training.trainer) && Objects.equals(trainingName, training.trainingName) && Objects.equals(trainingType, training.trainingType) && Objects.equals(trainingDate, training.trainingDate);
+        return trainingDuration == training.trainingDuration
+                && Objects.equals(id, training.id)
+                && Objects.equals(trainee, training.trainee)
+                && Objects.equals(trainer, training.trainer)
+                && Objects.equals(trainingName, training.trainingName)
+                && Objects.equals(trainingType, training.trainingType)
+                && Objects.equals(trainingDate, training.trainingDate);
     }
 
     @Override
