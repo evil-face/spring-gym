@@ -1,15 +1,8 @@
 package epam.xstack.model;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.lang.NonNull;
 
 import java.util.Objects;
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = Trainee.class, name = "Trainee"),
-    @JsonSubTypes.Type(value = Trainer.class, name = "Trainer")
-})
 public class User implements GymEntity {
     @NonNull
     private String id;

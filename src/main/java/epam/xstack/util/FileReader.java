@@ -2,6 +2,8 @@ package epam.xstack.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import epam.xstack.model.GymEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,16 @@ public final class FileReader {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileReader.class);
 
     static {
-        OBJECT_MAPPER.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("epam.xstack.model.Trainee")
+                .allowIfSubType("epam.xstack.model.Trainer")
+                .allowIfSubType("epam.xstack.model.Training")
+                .allowIfSubType("java.util.HashMap")
+                .allowIfSubType("java.util.ArrayList")
+                .allowIfSubType("java.util.Date")
+                .build();
+
+        OBJECT_MAPPER.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
     }
 
     private FileReader() {
