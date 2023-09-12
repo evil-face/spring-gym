@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,6 +62,20 @@ class TraineeServiceTest {
         Optional<Trainee> actual = traineeService.findById("1");
 
         assertThat(actual).contains(expected);
+    }
+
+    @Test
+    void testUpdate() {
+        doNothing().when(traineeDAO).update(getTestTrainee());
+
+        traineeService.update(getTestTrainee());
+    }
+
+    @Test
+    void testDelete() {
+        doNothing().when(traineeDAO).delete(getTestTrainee());
+
+        traineeService.delete(getTestTrainee());
     }
 
     private Trainee getTestTrainee() {
