@@ -47,8 +47,7 @@ class TrainerServiceTest {
 
         List<Trainer> actual = trainerService.findAll();
 
-        assertThat(actual).hasSize(3);
-        assertThat(actual).containsAll(expected);
+        assertThat(actual).hasSize(3).containsAll(expected);
     }
 
     @Test
@@ -59,8 +58,7 @@ class TrainerServiceTest {
 
         Optional<Trainer> actual = trainerService.findById("1");
 
-        assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
     }
 
     private Trainer getTestTrainer() {

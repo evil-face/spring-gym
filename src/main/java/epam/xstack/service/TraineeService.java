@@ -30,7 +30,7 @@ public final class TraineeService {
         String password = userService.generatePassword();
 
         Trainee trainee = new Trainee(id, firstName, lastName,
-                username, password, true,
+                username, password, isActive,
                 dateOfBirth, address);
 
         traineeDAO.save(trainee);
@@ -55,6 +55,5 @@ public final class TraineeService {
     public void delete(Trainee trainee) {
         traineeDAO.delete(trainee);
         LOGGER.info("Deleted trainee with id {} from the DB", trainee.getId());
-
     }
 }

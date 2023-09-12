@@ -1,13 +1,11 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.UserDAO;
-import epam.xstack.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -18,9 +16,9 @@ import java.util.UUID;
 class UserServiceTest {
     private static final int PASSWORD_LENGTH = 10;
     @InjectMocks
-    public UserService userService;
+    UserService userService;
     @Mock
-    public UserDAO userDAO;
+    UserDAO userDAO;
 
     @Test
     void testGenerateId() {
@@ -41,7 +39,7 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameDuplicate() {
         String expected = "john.wick";
-        Mockito.doReturn(true).when(userDAO).existsByUsername(expected);
+        when(userDAO.existsByUsername(expected)).thenReturn(true);
         String actual = userService.generateUsername(" john ", "wi ck ");
 
         assertThat(actual).isEqualTo(expected + "1");
@@ -50,7 +48,7 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameBadInput() {
         String expected = "john.wick";
-        Mockito.doReturn(false).when(userDAO).existsByUsername(expected);
+        when(userDAO.existsByUsername(expected)).thenReturn(false);
         String actual = userService.generateUsername("1john2", "3wick444");
 
         assertThat(actual).isEqualTo(expected);

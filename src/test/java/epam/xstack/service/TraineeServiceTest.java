@@ -49,8 +49,7 @@ class TraineeServiceTest {
 
         List<Trainee> actual = traineeService.findAll();
 
-        assertThat(actual).hasSize(3);
-        assertThat(actual).containsAll(expected);
+        assertThat(actual).hasSize(3).containsAll(expected);
     }
 
     @Test
@@ -61,8 +60,7 @@ class TraineeServiceTest {
 
         Optional<Trainee> actual = traineeService.findById("1");
 
-        assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
     }
 
     private Trainee getTestTrainee() {
