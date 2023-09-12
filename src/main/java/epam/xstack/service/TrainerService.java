@@ -30,7 +30,7 @@ public final class TrainerService {
         String password = userService.generatePassword();
 
         Trainer trainer = new Trainer(id, firstName, lastName,
-                username, password, true, specialization);
+                username, password, isActive, specialization);
 
         trainerDAO.save(trainer);
         LOGGER.info("Saved new trainer with id {} to the DB", trainer.getId());

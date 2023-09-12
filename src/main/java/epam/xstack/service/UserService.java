@@ -33,7 +33,7 @@ public final class UserService {
         String newUsername = clearedFirstName + "." + clearedLastName;
 
         while (userDAO.existsByUsername(newUsername)) {
-            String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=[0-9])");
+            String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=\\d)");
 
             if (detachedUsername.length == 1) {
                 newUsername = detachedUsername[0] + "1";
