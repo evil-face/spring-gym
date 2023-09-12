@@ -1,4 +1,4 @@
-package epam.xstack;
+package epam.xstack.service;
 
 import epam.xstack.dao.UserDAO;
 import epam.xstack.service.UserService;

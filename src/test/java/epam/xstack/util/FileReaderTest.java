@@ -1,11 +1,10 @@
-package epam.xstack;
+package epam.xstack.util;
 
 import epam.xstack.model.GymEntity;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
-import epam.xstack.util.FileReader;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
