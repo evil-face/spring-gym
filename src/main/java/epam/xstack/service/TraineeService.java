@@ -34,7 +34,7 @@ public final class TraineeService {
                 dateOfBirth, address);
 
         traineeDAO.save(trainee);
-        LOGGER.info("Saved new trainee with id " + trainee.getId() + " to the DB");
+        LOGGER.info("Saved new trainee with id {} to the DB", trainee.getId());
 
         return trainee;
     }
@@ -49,12 +49,12 @@ public final class TraineeService {
 
     public void update(Trainee trainee) {
         traineeDAO.update(trainee);
-        LOGGER.info("Updated trainee with id " + trainee.getId() + " in the DB");
+        LOGGER.info("Updated trainee with id {} in the DB", trainee.getId());
     }
 
     public void delete(Trainee trainee) {
         traineeDAO.delete(trainee);
-        LOGGER.info("Deleted trainee with id " + trainee.getId() + " from the DB");
+        LOGGER.info("Deleted trainee with id {} from the DB", trainee.getId());
 
     }
 }

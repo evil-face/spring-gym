@@ -85,7 +85,7 @@ public final class MapRepositoryImpl implements MapRepository {
             if (entityType.equals("Trainee")) {
                 updateTrainee(oldEntity.get(), entity);
             } else {
-                LOGGER.error("No such entity type for update exists: " + entityType);
+                LOGGER.error("No such entity type for update exists: {}", entityType);
             }
         }
     }

@@ -33,7 +33,7 @@ public final class TrainerService {
                 username, password, true, specialization);
 
         trainerDAO.save(trainer);
-        LOGGER.info("Saved new trainer with id " + trainer.getId() + " to the DB");
+        LOGGER.info("Saved new trainer with id {} to the DB", trainer.getId());
 
 
         return trainer;
@@ -49,6 +49,6 @@ public final class TrainerService {
 
     public void update(Trainer trainer) {
         trainerDAO.update(trainer);
-        LOGGER.info("Updated trainer with id " + trainer.getId() + " in the DB");
+        LOGGER.info("Updated trainer with id {} in the DB", trainer.getId());
     }
 }

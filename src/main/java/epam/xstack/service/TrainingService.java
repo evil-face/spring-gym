@@ -32,7 +32,7 @@ public final class TrainingService {
         Training training = new Training(id, trainee, trainer, name, type, date, duration);
 
         trainingDAO.save(training);
-        LOGGER.info("Saved new training with id " + training.getId() + " to the DB");
+        LOGGER.info("Saved new training with id {} to the DB", training.getId());
 
 
         return training;

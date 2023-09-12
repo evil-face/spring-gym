@@ -35,7 +35,7 @@ public final class TrainerDAO {
                 .map(Trainer.class::cast);
 
         if (trainer.isEmpty()) {
-            LOGGER.warn("No records found for id " + id);
+            LOGGER.warn("No records found for id {}", id);
         }
 
         return trainer;

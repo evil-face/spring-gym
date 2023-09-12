@@ -13,7 +13,7 @@ import java.util.Optional;
 @Component
 public final class TrainingDAO {
     private final MapRepository mapRepository;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrainerDAO.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDAO.class);
 
 
     @Autowired
@@ -36,7 +36,7 @@ public final class TrainingDAO {
                 .map(Training.class::cast);
 
         if (training.isEmpty()) {
-            LOGGER.warn("No records found for id " + id);
+            LOGGER.warn("No records found for id {}", id);
         }
 
         return training;

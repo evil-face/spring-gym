@@ -40,7 +40,7 @@ public final class FileReader {
         Map<String, List<GymEntity>> storage = new HashMap<>();
 
         if (Files.exists(Paths.get(storageFilePath))) {
-            LOGGER.info("Found file " + storageFilePath + ", trying to parse.");
+            LOGGER.info("Found file {}, trying to parse.", storageFilePath);
             File diskStorage = new File(storageFilePath);
 
             if (diskStorage.length() != 0) {
@@ -61,7 +61,7 @@ public final class FileReader {
 
     public static void writeStorage(Map<String, List<GymEntity>> storage, String storageFilePath) {
         if (Files.exists(Paths.get(storageFilePath))) {
-            LOGGER.info("Found file " + storageFilePath + ", trying to write.");
+            LOGGER.info("Found file {}, trying to write.", storageFilePath);
             try {
                 OBJECT_MAPPER.writeValue(new File(storageFilePath), storage);
                 LOGGER.info("Successfully saved storage to disk.");
