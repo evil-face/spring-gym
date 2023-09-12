@@ -13,21 +13,22 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Service
 public final class TrainingService {
     private final TrainingDAO trainingDAO;
+    private final UserService userService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingService.class);
 
     @Autowired
-    public TrainingService(TrainingDAO trainingDAO) {
+    public TrainingService(TrainingDAO trainingDAO, UserService userService) {
         this.trainingDAO = trainingDAO;
+        this.userService = userService;
     }
 
     public Training createTraining(Trainee trainee, Trainer trainer, String name,
                                    TrainingType type, Date date, int duration) {
-        String id = UUID.randomUUID().toString();
+        String id = userService.generateId();
 
         Training training = new Training(id, trainee, trainer, name, type, date, duration);
 
