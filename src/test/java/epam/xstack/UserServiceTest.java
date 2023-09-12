@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 import java.util.UUID;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
     private static final int PASSWORD_LENGTH = 10;
     @InjectMocks
     public UserService userService;
@@ -23,14 +23,14 @@ public class UserServiceTest {
     public UserDAO userDAO;
 
     @Test
-    public void testGenerateId() {
+    void testGenerateId() {
         String actual = userService.generateId();
 
         Assertions.assertDoesNotThrow(() -> UUID.fromString(actual));
     }
 
     @Test
-    public void testGenerateUsername() {
+    void testGenerateUsername() {
         String expected = "john.wick";
         when(userDAO.existsByUsername(expected)).thenReturn(false);
         String actual = userService.generateUsername(" john ", "wi ck ");
@@ -39,7 +39,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testGenerateUsernameDuplicate() {
+    void testGenerateUsernameDuplicate() {
         String expected = "john.wick";
         Mockito.doReturn(true).when(userDAO).existsByUsername(expected);
         String actual = userService.generateUsername(" john ", "wi ck ");
@@ -48,7 +48,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void testGenerateUsernameBadInput() {
+    void testGenerateUsernameBadInput() {
         String expected = "john.wick";
         Mockito.doReturn(false).when(userDAO).existsByUsername(expected);
         String actual = userService.generateUsername("1john2", "3wick444");
@@ -57,7 +57,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void generatePassword() {
+    void generatePassword() {
         String actual = userService.generatePassword();
         assertThat(actual).hasSize(PASSWORD_LENGTH);
     }

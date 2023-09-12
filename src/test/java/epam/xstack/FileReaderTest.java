@@ -11,13 +11,15 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class FileReaderTest {
+class FileReaderTest {
     private static final String TEST_FIXTURE_PATH = "src/test/resources/filereader_write_fixture.txt";
     private static final String TRAINEE_MAP_KEY = "trainee";
     private static final String TRAINER_MAP_KEY = "trainer";
@@ -26,24 +28,27 @@ public class FileReaderTest {
 
 
     @Test
-    public void testWriting() throws IOException {
+    void testWriting() throws IOException {
         Map<String, List<GymEntity>> testStorage = new HashMap<>();
-        testStorage.put(TRAINEE_MAP_KEY, List.of(getMockTrainee()));
-        testStorage.put(TRAINER_MAP_KEY, List.of(getMockTrainer()));
-        testStorage.put(TRAINING_MAP_KEY, List.of(getMockTraining()));
+        testStorage.put(TRAINEE_MAP_KEY, new ArrayList<>(Arrays.asList(getMockTrainee())));
+        testStorage.put(TRAINER_MAP_KEY, new ArrayList<>(Arrays.asList(getMockTrainer())));
+        testStorage.put(TRAINING_MAP_KEY, new ArrayList<>(Arrays.asList(getMockTraining())));
 
         FileReader.writeStorage(testStorage, TEST_FIXTURE_PATH);
 
         String fileContent = Files.readString(Path.of(TEST_FIXTURE_PATH));
 
-        assertThat(fileContent).contains("trainee").contains("trainer").contains("training");
-        assertThat(fileContent).contains(getMockTrainee().getUsername())
+        assertThat(fileContent)
+                .contains("trainee")
+                .contains("trainer")
+                .contains("training")
+                .contains(getMockTrainee().getUsername())
                 .contains(getMockTrainer().getUsername())
                 .contains(getMockTraining().getTrainingName());
     }
 
     @Test
-    public void testReading() {
+    void testReading() {
         Map<String, List<GymEntity>> storage = FileReader.readStorage(TEST_FIXTURE_PATH);
 
         assertThat(storage.get(TRAINEE_MAP_KEY)).contains(getMockTrainee());
