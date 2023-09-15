@@ -1,13 +1,26 @@
 package epam.xstack.model;
 
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+
+import java.util.List;
 import java.util.Objects;
 
+@Entity
 public final class Trainer extends User {
+
+    @ManyToOne
+    @JoinColumn(name = "specialization", referencedColumnName = "id")
     private TrainingType specialization;
 
-    public Trainer(String id, String firstName, String lastName,
+    @OneToMany(mappedBy = "trainer")
+    private List<Training> trainingList;
+
+    public Trainer(String firstName, String lastName,
                    String username, String password, boolean isActive, TrainingType specialization) {
-        super(id, firstName, lastName, username, password, isActive);
+        super(firstName, lastName, username, password, isActive);
         this.specialization = specialization;
     }
 

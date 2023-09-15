@@ -1,21 +1,38 @@
 package epam.xstack.model;
 
+import javax.persistence.*;
+
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.util.Date;
 import java.util.Objects;
 
-public final class Training implements GymEntity {
-    private String id;
+@Entity
+public final class Training {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @ManyToOne
+    @JoinColumn(name = "trainee_id", referencedColumnName = "id")
     private Trainee trainee;
+    @ManyToOne
+    @JoinColumn(name = "trainer_id", referencedColumnName = "id")
     private Trainer trainer;
+    @Column(nullable = false)
     private String trainingName;
+    @ManyToOne
+    @JoinColumn(name = "training_type", referencedColumnName = "id")
     private TrainingType trainingType;
+    @Temporal(value = TemporalType.DATE)
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @Column(nullable = false)
     private Date trainingDate;
+    @Column
     private int trainingDuration;
 
-    public Training(String id, Trainee trainee, Trainer trainer,
+    public Training(Trainee trainee, Trainer trainer,
                     String trainingName, TrainingType trainingType,
                     Date trainingDate, int trainingDuration) {
-        this.id = id;
         this.trainee = trainee;
         this.trainer = trainer;
         this.trainingName = trainingName;
@@ -27,12 +44,11 @@ public final class Training implements GymEntity {
     public Training() {
     }
 
-    @Override
-    public String getId() {
+    public long getId() {
         return this.id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 

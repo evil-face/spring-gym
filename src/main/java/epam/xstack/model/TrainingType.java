@@ -1,12 +1,30 @@
 package epam.xstack.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+
+import java.util.List;
 import java.util.Objects;
 
-public final class TrainingType implements GymEntity {
-    private String id;
+@Entity
+public final class TrainingType {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @Column(nullable = false)
     private String trainingTypeName;
 
-    public TrainingType(String id, String trainingTypeName) {
+    @OneToMany(mappedBy = "specialization")
+    private List<Trainer> trainerList;
+
+    @OneToMany(mappedBy = "trainingType")
+    private List<Training> trainingList;
+
+    public TrainingType(long id, String trainingTypeName) {
         this.id = id;
         this.trainingTypeName = trainingTypeName;
     }
@@ -14,12 +32,11 @@ public final class TrainingType implements GymEntity {
     public TrainingType() {
     }
 
-    @Override
-    public String getId() {
+    public long getId() {
         return this.id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 

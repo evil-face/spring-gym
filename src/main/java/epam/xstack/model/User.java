@@ -1,25 +1,28 @@
 package epam.xstack.model;
 
-import org.springframework.lang.NonNull;
-
+import javax.persistence.*;
 import java.util.Objects;
-public class User implements GymEntity {
-    @NonNull
-    private String id;
-    @NonNull
+
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+@Table(name = "User_")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @Column(nullable = false)
     private String firstName;
-    @NonNull
+    @Column(nullable = false)
     private String lastName;
-    @NonNull
+    @Column(nullable = false)
     private String username;
-    @NonNull
+    @Column(nullable = false)
     private String password;
-    @NonNull
+    @Column(nullable = false)
     private boolean isActive;
 
-    public User(@NonNull String id, @NonNull String firstName, @NonNull String lastName,
-                @NonNull String username, @NonNull String password, boolean isActive) {
-        this.id = id;
+    public User(String firstName, String lastName,
+                String username, String password, boolean isActive) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
@@ -30,55 +33,51 @@ public class User implements GymEntity {
     public User() {
     }
 
-    public final String getId() {
+    public long getId() {
         return id;
     }
 
-    public final void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    @NonNull
-    public final String getFirstName() {
+    public String getFirstName() {
         return firstName;
     }
 
-    public final void setFirstName(@NonNull String firstName) {
+    public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
-    @NonNull
-    public final String getLastName() {
+    public String getLastName() {
         return lastName;
     }
 
-    public final void setLastName(@NonNull String lastName) {
+    public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
-    @NonNull
-    public final String getUsername() {
+    public String getUsername() {
         return username;
     }
 
-    public final void setUsername(@NonNull String username) {
+    public void setUsername(String username) {
         this.username = username;
     }
 
-    @NonNull
-    public final String getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    public final void setPassword(@NonNull String password) {
+    public void setPassword(String password) {
         this.password = password;
     }
 
-    public final boolean isActive() {
+    public boolean isActive() {
         return isActive;
     }
 
-    public final void setActive(boolean active) {
+    public void setActive(boolean active) {
         isActive = active;
     }
 
@@ -94,7 +93,7 @@ public class User implements GymEntity {
             return false;
         }
         User user = (User) o;
-        return id.equals(user.id)
+        return id == user.id
                 && isActive == user.isActive
                 && Objects.equals(firstName, user.firstName)
                 && Objects.equals(lastName, user.lastName)
