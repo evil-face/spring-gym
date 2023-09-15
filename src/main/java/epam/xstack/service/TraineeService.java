@@ -23,27 +23,24 @@ public final class TraineeService {
         this.userService = userService;
     }
 
-    public Trainee createTrainee(String firstName, String lastName,
+    public void createTrainee(String firstName, String lastName,
                                  boolean isActive, Date dateOfBirth, String address) {
-        String id = userService.generateId();
         String username = userService.generateUsername(firstName, lastName);
         String password = userService.generatePassword();
 
-        Trainee trainee = new Trainee(id, firstName, lastName,
+        Trainee trainee = new Trainee(firstName, lastName,
                 username, password, isActive,
                 dateOfBirth, address);
 
         traineeDAO.save(trainee);
         LOGGER.info("Saved new trainee with id {} to the DB", trainee.getId());
-
-        return trainee;
     }
 
     public List<Trainee> findAll() {
         return traineeDAO.findAll();
     }
 
-    public Optional<Trainee> findById(String id) {
+    public Optional<Trainee> findById(long id) {
         return traineeDAO.findById(id);
     }
 

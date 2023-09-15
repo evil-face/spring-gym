@@ -1,52 +1,62 @@
 package epam.xstack.dao;
 
 import epam.xstack.model.Trainee;
-import epam.xstack.repository.MapRepository;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
-public final class TraineeDAO {
-    private final MapRepository mapRepository;
+@Transactional(readOnly = true)
+public class TraineeDAO {
+    private final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeDAO.class);
 
-
     @Autowired
-    public TraineeDAO(MapRepository mapRepository) {
-        this.mapRepository = mapRepository;
+    public TraineeDAO(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
+    @Transactional
     public void save(Trainee trainee) {
-        mapRepository.save(trainee);
+        Session session = sessionFactory.getCurrentSession();
+        session.persist(trainee);
     }
 
     public List<Trainee> findAll() {
-        return mapRepository.findAll(Trainee.class.getSimpleName()).stream()
-                .map(Trainee.class::cast)
-                .toList();
+        Session session = sessionFactory.getCurrentSession();
+
+        return session.createQuery("from Trainee t", Trainee.class)
+                .getResultList();
     }
 
-    public Optional<Trainee> findById(String id) {
-        Optional<Trainee> trainee = mapRepository.findById(Trainee.class.getSimpleName(), id)
-                .map(Trainee.class::cast);
+    public Optional<Trainee> findById(long id) {
+        Session session = sessionFactory.getCurrentSession();
 
-        if (trainee.isEmpty()) {
+        Trainee trainee = session.get(Trainee.class, id);
+
+        if (trainee == null) {
             LOGGER.warn("No records found for id {}", id);
         }
 
-        return trainee;
+        return trainee == null ? Optional.empty() : Optional.of(trainee);
     }
 
-    public void update(Trainee trainee) {
-        mapRepository.update(trainee);
+    @Transactional
+    public void update(Trainee updatedTrainee) {
+        Session session = sessionFactory.getCurrentSession();
+        session.merge(updatedTrainee);
     }
 
+    @Transactional
     public void delete(Trainee trainee) {
-        mapRepository.delete(trainee);
+        Session session = sessionFactory.getCurrentSession();
+        session.remove(trainee);
     }
 }

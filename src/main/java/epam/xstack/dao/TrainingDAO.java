@@ -1,44 +1,49 @@
 package epam.xstack.dao;
 
 import epam.xstack.model.Training;
-import epam.xstack.repository.MapRepository;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 
 @Component
-public final class TrainingDAO {
-    private final MapRepository mapRepository;
+public class TrainingDAO {
+    private final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDAO.class);
 
-
     @Autowired
-    public TrainingDAO(MapRepository mapRepository) {
-        this.mapRepository = mapRepository;
+    public TrainingDAO(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
+    @Transactional
     public void save(Training training) {
-        mapRepository.save(training);
+        Session session = sessionFactory.getCurrentSession();
+        session.persist(training);
     }
 
     public List<Training> findAll() {
-        return mapRepository.findAll(Training.class.getSimpleName()).stream()
-                .map(Training.class::cast)
-                .toList();
+        Session session = sessionFactory.getCurrentSession();
+
+        return session.createQuery("from Training t", Training.class)
+                .getResultList();
     }
 
-    public Optional<Training> findById(String id) {
-        Optional<Training> training = mapRepository.findById(Training.class.getSimpleName(), id)
-                .map(Training.class::cast);
+    public Optional<Training> findById(long id) {
+        Session session = sessionFactory.getCurrentSession();
 
-        if (training.isEmpty()) {
+        Training training = session.get(Training.class, id);
+
+        if (training == null) {
             LOGGER.warn("No records found for id {}", id);
         }
 
-        return training;
+        return training == null ? Optional.empty() : Optional.of(training);
     }
 }

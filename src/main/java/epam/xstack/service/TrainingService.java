@@ -17,33 +17,27 @@ import java.util.Optional;
 @Service
 public final class TrainingService {
     private final TrainingDAO trainingDAO;
-    private final UserService userService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingService.class);
 
     @Autowired
-    public TrainingService(TrainingDAO trainingDAO, UserService userService) {
+    public TrainingService(TrainingDAO trainingDAO) {
         this.trainingDAO = trainingDAO;
-        this.userService = userService;
     }
 
-    public Training createTraining(Trainee trainee, Trainer trainer, String name,
+    public void createTraining(Trainee trainee, Trainer trainer, String name,
                                    TrainingType type, Date date, int duration) {
-        String id = userService.generateId();
 
-        Training training = new Training(id, trainee, trainer, name, type, date, duration);
+        Training training = new Training(trainee, trainer, name, type, date, duration);
 
         trainingDAO.save(training);
         LOGGER.info("Saved new training with id {} to the DB", training.getId());
-
-
-        return training;
     }
 
     public List<Training> findAll() {
         return trainingDAO.findAll();
     }
 
-    public Optional<Training> findById(String id) {
+    public Optional<Training> findById(long id) {
         return trainingDAO.findById(id);
     }
 }

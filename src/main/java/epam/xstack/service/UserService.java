@@ -17,10 +17,6 @@ public final class UserService {
         this.userDAO = userDAO;
     }
 
-    public String generateId() {
-        return UUID.randomUUID().toString();
-    }
-
     public String generateUsername(String firstName, String lastName) {
         String clearedFirstName = firstName.trim().toLowerCase()
                 .replace(" ", "")

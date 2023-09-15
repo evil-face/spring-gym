@@ -23,27 +23,24 @@ public final class TrainerService {
         this.userService = userService;
     }
 
-    public Trainer createTrainer(String firstName, String lastName,
+    public void createTrainer(String firstName, String lastName,
                                  boolean isActive, TrainingType specialization) {
-        String id = userService.generateId();
+
         String username = userService.generateUsername(firstName, lastName);
         String password = userService.generatePassword();
 
-        Trainer trainer = new Trainer(id, firstName, lastName,
+        Trainer trainer = new Trainer(firstName, lastName,
                 username, password, isActive, specialization);
 
         trainerDAO.save(trainer);
         LOGGER.info("Saved new trainer with id {} to the DB", trainer.getId());
-
-
-        return trainer;
     }
 
     public List<Trainer> findAll() {
         return trainerDAO.findAll();
     }
 
-    public Optional<Trainer> findById(String id) {
+    public Optional<Trainer> findById(long id) {
         return trainerDAO.findById(id);
     }
 
