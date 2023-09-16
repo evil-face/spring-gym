@@ -18,23 +18,29 @@ public final class UserService {
     }
 
     public String generateUsername(String firstName, String lastName) {
-        String clearedFirstName = firstName.trim().toLowerCase()
-                .replace(" ", "")
-                .replaceAll("\\d", "");
+        String newUsername = null;
 
-        String clearedLastName = lastName.trim().toLowerCase()
-                .replace(" ", "")
-                .replaceAll("\\d", "");
+        if(firstName != null && lastName != null) {
+            String clearedFirstName = firstName.trim().toLowerCase()
+                    .replace(" ", "")
+                    .replaceAll("\\d", "");
 
-        String newUsername = clearedFirstName + "." + clearedLastName;
+            String clearedLastName = lastName.trim().toLowerCase()
+                    .replace(" ", "")
+                    .replaceAll("\\d", "");
+
+            newUsername = clearedFirstName + "." + clearedLastName;
 
         while (userDAO.existsByUsername(newUsername)) {
             String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=\\d)");
+            while (userDAO.existsByUsername(newUsername)) {
+                String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=\\d)");
 
-            if (detachedUsername.length == 1) {
-                newUsername = detachedUsername[0] + "1";
-            } else {
-                newUsername = detachedUsername[0] + (Integer.parseInt(detachedUsername[1]) + 1);
+                if (detachedUsername.length == 1) {
+                    newUsername = detachedUsername[0] + "1";
+                } else {
+                    newUsername = detachedUsername[0] + (Integer.parseInt(detachedUsername[1]) + 1);
+                }
             }
         }
 
