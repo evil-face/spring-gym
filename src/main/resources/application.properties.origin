@@ -1,0 +1,6 @@
+hibernate.driver_class=org.postgresql.Driver
+hibernate.connection.url=jdbc:postgresql://
+hibernate.connection.username=
+hibernate.connection.password=
+hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+hibernate.current_session_context_class=thread
