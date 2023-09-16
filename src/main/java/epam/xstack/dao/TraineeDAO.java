@@ -59,4 +59,16 @@ public class TraineeDAO {
         Session session = sessionFactory.getCurrentSession();
         session.remove(trainee);
     }
+
+    @Transactional
+    public void updatePassword(long id, String newPassword) {
+        Session session = sessionFactory.getCurrentSession();
+        Trainee trainee = session.get(Trainee.class, id);
+
+        if (trainee == null) {
+            LOGGER.warn("No records found for id {}", id);
+        } else {
+            trainee.setPassword(newPassword);
+        }
+    }
 }

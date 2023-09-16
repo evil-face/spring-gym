@@ -53,4 +53,16 @@ public class TrainerDAO {
         Session session = sessionFactory.getCurrentSession();
         session.merge(updatedTrainer);
     }
+
+    @Transactional
+    public void updatePassword(long id, String newPassword) {
+        Session session = sessionFactory.getCurrentSession();
+        Trainer trainer = session.get(Trainer.class, id);
+
+        if (trainer == null) {
+            LOGGER.warn("No records found for id {}", id);
+        } else {
+            trainer.setPassword(newPassword);
+        }
+    }
 }

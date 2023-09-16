@@ -79,5 +79,14 @@ public final class TrainerService {
             throw new AuthenticationException("Authentication failed");
         }
     }
+
+    public void updatePassword(long id, String newPassword, String username, String oldPassword) throws AuthenticationException {
+        if (authService.authenticate(username, oldPassword)) {
+            trainerDAO.updatePassword(id, newPassword);
+            LOGGER.info("Updated password of trainer with id {} in the DB", id);
+        } else {
+            LOGGER.info("Failed attempt to update trainer password with credentials {}:{}", username, oldPassword);
+            throw new AuthenticationException("Authentication failed");
+        }
     }
 }
