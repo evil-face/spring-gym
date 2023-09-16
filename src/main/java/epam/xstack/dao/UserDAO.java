@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
+@Transactional(readOnly = true)
 public class UserDAO {
     private final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDAO.class);
@@ -23,7 +24,6 @@ public class UserDAO {
         this.sessionFactory = sessionFactory;
     }
 
-    @Transactional(readOnly = true)
     public boolean existsByUsername(String newUsername) {
         Session session = sessionFactory.getCurrentSession();
 
