@@ -2,6 +2,8 @@ package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
 import epam.xstack.model.Trainee;
+import epam.xstack.model.User;
+import epam.xstack.validator.GymValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,11 +91,15 @@ public final class TraineeService {
                 LOGGER.info("Could not update trainee because of violations: " + violations);
                 throw new ValidationException();
             }
+
+            traineeDAO.update(trainee);
+            LOGGER.info("Updated trainee with id {} in the DB", trainee.getId());
+        } else {
+            LOGGER.info("Failed attempt update trainee with credentials {}:{}", username, password);
+            throw new AuthenticationException("Authentication failed");
+        }
     }
 
-    public void delete(Trainee trainee) {
-        traineeDAO.delete(trainee);
-        LOGGER.info("Deleted trainee with id {} from the DB", trainee.getId());
     public void delete(Trainee trainee, String username, String password) throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             traineeDAO.delete(trainee);

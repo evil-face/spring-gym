@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.validation.constraints.Past;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -18,6 +20,7 @@ public final class Trainee extends User {
 
     @Temporal(value = TemporalType.DATE)
     @DateTimeFormat(pattern = "dd/MM/yyyy")
+    @Past(message = "Date of birth must be in the past")
     private Date dateOfBirth;
     @Column
     private String address;

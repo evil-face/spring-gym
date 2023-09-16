@@ -1,6 +1,7 @@
 package epam.xstack.model;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotBlank;
 import java.util.Objects;
 
 @Entity
@@ -11,12 +12,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     @Column(nullable = false)
+    @NotBlank(message = "First name cannot be empty")
     private String firstName;
     @Column(nullable = false)
+    @NotBlank(message = "Last name cannot be empty")
     private String lastName;
     @Column(nullable = false)
+    @NotBlank(message = "Username cannot be empty")
     private String username;
     @Column(nullable = false)
+    @NotBlank(message = "Password cannot be empty")
     private String password;
     @Column(nullable = false)
     private boolean isActive;
