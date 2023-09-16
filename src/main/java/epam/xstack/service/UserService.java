@@ -1,11 +1,13 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.UserDAO;
+import epam.xstack.model.User;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.Optional;
+
 
 @Service
 public final class UserService {
@@ -49,5 +51,9 @@ public final class UserService {
 
     public String generatePassword() {
         return RandomStringUtils.randomAlphanumeric(PASSWORD_LENGTH);
+    }
+
+    public Optional<User> findByUsername(String username) {
+        return userDAO.findByUsername(username);
     }
 }
