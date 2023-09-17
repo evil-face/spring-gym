@@ -2,6 +2,7 @@ package epam.xstack.service;
 
 import epam.xstack.dao.TrainerDAO;
 import epam.xstack.model.Trainer;
+import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.model.User;
 import epam.xstack.validator.GymValidator;
@@ -114,4 +115,21 @@ public final class TrainerService {
         }
     }
 
+    public List<Training> getTrainingsByTrainerUsername(String trainerUsername,
+                                                        String username, String password) throws AuthenticationException {
+        if (authService.authenticate(username, password)) {
+            return trainerDAO.getTrainingsByTraineeUsername(trainerUsername);
+        } else {
+            LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
+                    trainerUsername, username, password);
+            throw new AuthenticationException("Authentication failed");
+        }
+    }
+
+    public List<Training> getTrainingsByTrainerUsernameAndTraineeLastName(String trainerUsername, String traineeLastname,
+                                                                          String username, String password) throws AuthenticationException {
+        return getTrainingsByTrainerUsername(trainerUsername, username, password).stream()
+                .filter(training -> training.getTrainee().getLastName().equals(traineeLastname))
+                .toList();
+    }
 }

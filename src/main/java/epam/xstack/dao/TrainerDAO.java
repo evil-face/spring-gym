@@ -1,6 +1,9 @@
 package epam.xstack.dao;
 
 import epam.xstack.model.Trainer;
+import epam.xstack.model.Training;
+import org.hibernate.Hibernate;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -9,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.NoResultException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -64,5 +69,26 @@ public class TrainerDAO {
         } else {
             trainer.setPassword(newPassword);
         }
+    }
+
+    public List<Training> getTrainingsByTraineeUsername(String trainerUsername) {
+        Session session = sessionFactory.getCurrentSession();
+        Trainer trainer = null;
+
+        try {
+            trainer = session.createQuery(
+                            "SELECT t FROM Trainer t WHERE username = :username", Trainer.class)
+                    .setParameter("username", trainerUsername)
+                    .getSingleResult();
+
+            if (trainer != null) {
+                Hibernate.initialize(trainer.getTrainingList());
+                return trainer.getTrainingList();
+            }
+        } catch (NonUniqueResultException | NoResultException e) {
+            LOGGER.warn("Either no trainers or several trainers were found for username {}", trainerUsername);
+        }
+
+        return new ArrayList<>();
     }
 }

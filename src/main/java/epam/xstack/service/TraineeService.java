@@ -2,6 +2,7 @@ package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
 import epam.xstack.model.Trainee;
+import epam.xstack.model.Training;
 import epam.xstack.model.User;
 import epam.xstack.validator.GymValidator;
 import org.slf4j.Logger;
@@ -135,6 +136,24 @@ public final class TraineeService {
             LOGGER.info("Failed attempt to change trainee activation status with credentials {}:{}", username, password);
             throw new AuthenticationException("Authentication failed");
         }
+    }
+
+    public List<Training> getTrainingsByTraineeUsername(String traineeUsername,
+                                                        String username, String password) throws AuthenticationException {
+        if (authService.authenticate(username, password)) {
+            return traineeDAO.getTrainingsByTraineeUsername(traineeUsername);
+        } else {
+            LOGGER.info("Failed attempt to get trainings for trainee {} with credentials {}:{}",
+                    traineeUsername, username, password);
+            throw new AuthenticationException("Authentication failed");
+        }
+    }
+
+    public List<Training> getTrainingsByTraineeUsernameAndTrainerLastName(String traineeUsername, String trainerLastname,
+                                                        String username, String password) throws AuthenticationException {
+        return getTrainingsByTraineeUsername(traineeUsername, username, password).stream()
+                .filter(training -> training.getTrainer().getLastName().equals(trainerLastname))
+                .toList();
     }
 
 }
