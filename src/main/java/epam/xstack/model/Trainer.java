@@ -24,7 +24,6 @@ public final class Trainer extends User {
         this.specialization = specialization;
     }
 
-
     public Trainer() {
     }
 
@@ -34,6 +33,14 @@ public final class Trainer extends User {
 
     public void setSpecialization(TrainingType specialization) {
         this.specialization = specialization;
+    }
+
+    public List<Training> getTrainingList() {
+        return trainingList;
+    }
+
+    public void setTrainingList(List<Training> trainingList) {
+        this.trainingList = trainingList;
     }
 
     @Override

@@ -54,6 +54,14 @@ public final class Trainee extends User {
         this.address = address;
     }
 
+    public List<Training> getTrainingList() {
+        return trainingList;
+    }
+
+    public void setTrainingList(List<Training> trainingList) {
+        this.trainingList = trainingList;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
