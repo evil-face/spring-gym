@@ -50,4 +50,16 @@ public class UserDAO {
 
         return Optional.ofNullable(user);
     }
+
+    @Transactional
+    public void changeActivationStatus(long id) {
+        Session session = sessionFactory.getCurrentSession();
+        User user = session.get(User.class, id);
+
+        if (user == null) {
+            LOGGER.warn("No records found for id {}", id);
+        } else {
+            user.setActive(!user.isActive());
+        }
+    }
 }

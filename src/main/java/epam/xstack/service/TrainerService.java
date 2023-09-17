@@ -106,4 +106,12 @@ public final class TrainerService {
             throw new AuthenticationException("Authentication failed");
         }
     }
+
+    public void changeActivationStatus(long id, String username, String password) {
+        if (authService.authenticate(username, password)) {
+            userService.changeActivationStatus(id);
+            LOGGER.info("Changed trainer activation status for id {}", id);
+        }
+    }
+
 }

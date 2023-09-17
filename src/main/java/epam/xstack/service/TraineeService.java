@@ -126,4 +126,15 @@ public final class TraineeService {
             throw new AuthenticationException("Authentication failed");
         }
     }
+
+    public void changeActivationStatus(long id, String username, String password) throws AuthenticationException {
+        if (authService.authenticate(username, password)) {
+            userService.changeActivationStatus(id);
+            LOGGER.info("Changed trainee activation status for id {}", id);
+        } else {
+            LOGGER.info("Failed attempt to change trainee activation status with credentials {}:{}", username, password);
+            throw new AuthenticationException("Authentication failed");
+        }
+    }
+
 }
