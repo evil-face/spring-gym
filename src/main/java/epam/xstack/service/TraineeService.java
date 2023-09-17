@@ -2,6 +2,7 @@ package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
 import epam.xstack.model.Trainee;
+import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.User;
 import epam.xstack.validator.GymValidator;
@@ -21,17 +22,20 @@ import java.util.Set;
 public final class TraineeService {
     private final TraineeDAO traineeDAO;
     private final UserService userService;
+    private final TrainerService trainerService;
     private final AuthenticationService authService;
     private final GymValidator<Trainee> validator;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeService.class);
 
     @Autowired
     public TraineeService(TraineeDAO traineeDAO, UserService userService,
-                          AuthenticationService authService, GymValidator<Trainee> validator) {
+                          AuthenticationService authService, GymValidator<Trainee> validator,
+                          TrainerService trainerService) {
         this.traineeDAO = traineeDAO;
         this.userService = userService;
         this.authService = authService;
         this.validator = validator;
+        this.trainerService = trainerService;
     }
 
     public void createTrainee(String firstName, String lastName,
@@ -154,6 +158,21 @@ public final class TraineeService {
         return getTrainingsByTraineeUsername(traineeUsername, username, password).stream()
                 .filter(training -> training.getTrainer().getLastName().equals(trainerLastname))
                 .toList();
+    }
+
+    public List<Trainer> getPotentialTrainersForTrainee(String traineeUsername, String username, String password)
+            throws AuthenticationException {
+        List<Trainer> allTrainers = trainerService.findAll(username, password);
+
+        List<Training> trainings = getTrainingsByTraineeUsername(traineeUsername, username, password);
+
+        List<Trainer> assignedTrainers = trainings.stream()
+                .map(Training::getTrainer)
+                .toList();
+
+        allTrainers.removeAll(assignedTrainers);
+
+        return allTrainers.stream().filter(Trainer::isActive).toList();
     }
 
 }
