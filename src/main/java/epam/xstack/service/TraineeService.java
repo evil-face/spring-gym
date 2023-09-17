@@ -26,9 +26,7 @@ public final class TraineeService {
 
     @Autowired
     public TraineeService(TraineeDAO traineeDAO, UserService userService,
-                          AuthenticationService authService,
-                          GymValidator<Trainee> validator
-    ) {
+                          AuthenticationService authService, GymValidator<Trainee> validator) {
         this.traineeDAO = traineeDAO;
         this.userService = userService;
         this.authService = authService;
