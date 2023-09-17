@@ -1,6 +1,7 @@
 package epam.xstack.dao;
 
 import epam.xstack.model.Trainee;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -9,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +60,25 @@ public class TraineeDAO {
     public void delete(Trainee trainee) {
         Session session = sessionFactory.getCurrentSession();
         session.remove(trainee);
+    }
+
+    @Transactional
+    public void delete(String usernameToDelete) {
+        Session session = sessionFactory.getCurrentSession();
+
+        try {
+            Trainee trainee = session.createQuery(
+                            "SELECT t FROM Trainee t WHERE username = :username", Trainee.class)
+                    .setParameter("username", usernameToDelete)
+                    .getSingleResult();
+
+            if (trainee != null) {
+                session.remove(trainee);
+                LOGGER.info("Deleted trainee with username {} from the DB", usernameToDelete);
+            }
+        } catch (NonUniqueResultException | NoResultException e) {
+            LOGGER.warn("Either no trainee or several trainees were found for username {}", usernameToDelete);
+        }
     }
 
     @Transactional

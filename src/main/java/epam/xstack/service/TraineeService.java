@@ -108,6 +108,15 @@ public final class TraineeService {
         }
     }
 
+    public void deleteByUsername(String usernameToDelete, String username, String password) throws AuthenticationException {
+        if (authService.authenticate(username, password)) {
+            traineeDAO.delete(usernameToDelete);
+        } else {
+            LOGGER.info("Failed attempt to delete trainee with credentials {}:{}", username, password);
+            throw new AuthenticationException("Authentication failed");
+        }
+    }
+
     public void updatePassword(long id, String newPassword, String username, String oldPassword) throws AuthenticationException {
         if (authService.authenticate(username, oldPassword)) {
             traineeDAO.updatePassword(id, newPassword);
