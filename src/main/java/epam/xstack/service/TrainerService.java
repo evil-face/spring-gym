@@ -129,10 +129,10 @@ public final class TrainerService {
         }
     }
 
-    public List<Training> getTrainingsByTrainerUsernameAndTraineeLastName(String trainerUsername, String traineeLastname,
+    public List<Training> getTrainingsByTrainerUsernameAndTraineeUsername(String trainerUsername, String traineeUsername,
                                                                           String username, String password) throws AuthenticationException {
         return getTrainingsByTrainerUsername(trainerUsername, username, password).stream()
-                .filter(training -> training.getTrainee().getLastName().equals(traineeLastname))
+                .filter(training -> training.getTrainee().getUsername().equals(traineeUsername))
                 .toList();
     }
 }

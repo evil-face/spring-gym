@@ -153,10 +153,10 @@ public final class TraineeService {
         }
     }
 
-    public List<Training> getTrainingsByTraineeUsernameAndTrainerLastName(String traineeUsername, String trainerLastname,
+    public List<Training> getTrainingsByTraineeUsernameAndTrainerUsername(String traineeUsername, String trainerUsername,
                                                         String username, String password) throws AuthenticationException {
         return getTrainingsByTraineeUsername(traineeUsername, username, password).stream()
-                .filter(training -> training.getTrainer().getLastName().equals(trainerLastname))
+                .filter(training -> training.getTrainer().getUsername().equals(trainerUsername))
                 .toList();
     }
 
