@@ -5,12 +5,14 @@ import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import javax.naming.AuthenticationException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -20,79 +22,132 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TrainingServiceTest {
-    private static final long TEST_DATE = 1694429213148L;
-
     @InjectMocks
     TrainingService trainingService;
     @Mock
     TrainingDAO trainingDAO;
     @Mock
-    UserService userService;
+    AuthenticationService authService;
 
     @Test
     void testCreateTraining() {
-        Training expected = getTestTraining();
+        String login = "test";
+        String password = "test";
+        Training training = getTestTraining();
 
-        when(userService.generateId()).thenReturn("1");
+        when(authService.authenticate(login, password)).thenReturn(true);
 
-        Training actual = trainingService.createTraining(expected.getTrainee(), expected.getTrainer(),
-                expected.getTrainingName(), expected.getTrainingType(),
-                new Date(TEST_DATE), expected.getTrainingDuration());
-
-        assertThat(actual).isEqualTo(expected);
+        Assertions.assertDoesNotThrow(
+                () -> trainingService.createTraining(
+                        training.getTrainee(),
+                        training.getTrainer(),
+                        training.getTrainingName(),
+                        training.getTrainingType(),
+                        training.getTrainingDate(),
+                        training.getTrainingDuration(),
+                        login, password
+                ));
     }
 
     @Test
-    void testFindAll() {
+    void testCreateTrainingBadCredentials() {
+        String login = "test";
+        String password = "test";
+        Training training = getTestTraining();
+
+        when(authService.authenticate(login, password)).thenReturn(false);
+
+        Assertions.assertThrows(AuthenticationException.class,
+                () -> trainingService.createTraining(
+                        training.getTrainee(),
+                        training.getTrainer(),
+                        training.getTrainingName(),
+                        training.getTrainingType(),
+                        training.getTrainingDate(),
+                        training.getTrainingDuration(),
+                        login, password
+                ));
+    }
+
+    @Test
+    void testFindAll() throws AuthenticationException {
         List<Training> expected = getTestTrainings();
+        String login = "test";
+        String password = "test";
 
-        when(trainingDAO.findAll()).thenReturn(getTestTrainings());
+        when(trainingDAO.findAll()).thenReturn(expected);
+        when(authService.authenticate(login, password)).thenReturn(true);
 
-        List<Training> actual = trainingService.findAll();
+        List<Training> actual = trainingService.findAll(login, password);
 
-        assertThat(actual).hasSize(3).containsAll(expected);
+        assertThat(actual).hasSize(5).containsAll(expected);
     }
 
     @Test
-    void testFindById() {
+    void testFindAllBadCredentials() {
+        String login = "test";
+        String password = "test";
+
+        when(authService.authenticate(login, password)).thenReturn(false);
+
+        Assertions.assertThrows(AuthenticationException.class, () -> trainingService.findAll(login, password));
+    }
+
+    @Test
+    void testFindById() throws AuthenticationException {
         Training expected = getTestTraining();
+        String login = "test";
+        String password = "test";
 
-        when(trainingDAO.findById("1")).thenReturn(Optional.of(getTestTraining()));
+        when(trainingDAO.findById(1)).thenReturn(Optional.of(expected));
+        when(authService.authenticate(login, password)).thenReturn(true);
 
-        Optional<Training> actual = trainingService.findById("1");
+        Optional<Training> actual = trainingService.findById(1, login, password);
 
         assertThat(actual).contains(expected);
     }
 
-    private Trainee getTestTrainee() {
-        return new Trainee("1", "Miguel", "Rodriguez",
-                "miguel.rodriguez", "qwerty", true,
-                new Date(TEST_DATE), "Mexico");
-    }
+    @Test
+    void testFindByIdBadCredentials() {
+        String login = "test";
+        String password = "test";
 
-    private Trainer getTestTrainer() {
-        return new Trainer("1", "Miguel", "Rodriguez",
-                "miguel.rodriguez", "qwerty", true,
-                getTestTrainingType());
+        when(authService.authenticate(login, password)).thenReturn(false);
+
+        Assertions.assertThrows(AuthenticationException.class, () -> trainingService.findById(1, login, password));
     }
 
     private Training getTestTraining() {
-        return new Training("1", getTestTrainee(), getTestTrainer(), "First visit",
-                getTestTrainingType(), new Date(TEST_DATE), 60);
+        return new Training(getTestTrainee(), getTestTrainer(),
+                "First visit", getTestTrainingType(), new Date(), 60);
+    }
+
+    private Trainee getTestTrainee() {
+        return new Trainee("Weak", "Dude", "weak.dude",
+                "weakpassword", true, new Date(), "Weak city");
+    }
+
+    private Trainer getTestTrainer() {
+        return new Trainer("Miguel", "Rodriguez", "miguel.rodriguez",
+                "qwerty", true, getTestTrainingType());
     }
 
     private TrainingType getTestTrainingType() {
-        return new TrainingType("1", "Lifting");
+        return new TrainingType(1, "Lifting");
     }
 
     private List<Training> getTestTrainings() {
         return List.of(
-                new Training("1", getTestTrainee(), getTestTrainer(), "First visit",
-                        getTestTrainingType(), new Date(TEST_DATE), 60),
-                new Training("2", getTestTrainee(), getTestTrainer(), "Second visit",
-                        getTestTrainingType(), new Date(TEST_DATE),80),
-                new Training("3", getTestTrainee(), getTestTrainer(), "Third visit",
-                        getTestTrainingType(), new Date(TEST_DATE), 100)
+                new Training(getTestTrainee(), getTestTrainer(), "First visit",
+                        getTestTrainingType(), new Date(), 60),
+                new Training(getTestTrainee(), getTestTrainer(), "Second visit",
+                        getTestTrainingType(), new Date(), 90),
+                new Training(getTestTrainee(), getTestTrainer(), "Third visit",
+                        getTestTrainingType(), new Date(), 120),
+                new Training(getTestTrainee(), getTestTrainer(), "First visit",
+                        getTestTrainingType(), new Date(), 200),
+                new Training(getTestTrainee(), getTestTrainer(), "Second visit",
+                        getTestTrainingType(), new Date(), 200)
         );
     }
 }

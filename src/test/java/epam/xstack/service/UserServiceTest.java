@@ -1,7 +1,6 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.UserDAO;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,7 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
-import java.util.UUID;
+import java.util.Collections;
+import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -21,16 +21,9 @@ class UserServiceTest {
     UserDAO userDAO;
 
     @Test
-    void testGenerateId() {
-        String actual = userService.generateId();
-
-        Assertions.assertDoesNotThrow(() -> UUID.fromString(actual));
-    }
-
-    @Test
     void testGenerateUsername() {
         String expected = "john.wick";
-        when(userDAO.existsByUsername(expected)).thenReturn(false);
+        when(userDAO.findUsernameOccurencies(expected)).thenReturn(Collections.emptyList());
         String actual = userService.generateUsername(" john ", "wi ck ");
 
         assertThat(actual).isEqualTo(expected);
@@ -39,7 +32,7 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameDuplicate() {
         String expected = "john.wick";
-        when(userDAO.existsByUsername(expected)).thenReturn(true);
+        when(userDAO.findUsernameOccurencies(expected)).thenReturn(List.of("john.wick"));
         String actual = userService.generateUsername(" john ", "wi ck ");
 
         assertThat(actual).isEqualTo(expected + "1");
@@ -48,8 +41,16 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameBadInput() {
         String expected = "john.wick";
-        when(userDAO.existsByUsername(expected)).thenReturn(false);
+        when(userDAO.findUsernameOccurencies(expected)).thenReturn(Collections.emptyList());
         String actual = userService.generateUsername("1john2", "3wick444");
+
+        assertThat(actual).isEqualTo(expected);
+    }
+
+    @Test
+    void testGenerateUsernameNullInput() {
+        String expected = "";
+        String actual = userService.generateUsername(null, null);
 
         assertThat(actual).isEqualTo(expected);
     }
