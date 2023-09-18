@@ -1,10 +1,7 @@
 package epam.xstack.dao;
 
 import epam.xstack.config.TestConfig;
-import epam.xstack.model.Trainee;
-import epam.xstack.model.Trainer;
-import epam.xstack.model.Training;
-import epam.xstack.model.TrainingType;
+import epam.xstack.model.User;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -16,21 +13,19 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.sql.DataSource;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringJUnitConfig(TestConfig.class)
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TrainingDAOTest {
+public class UserDAOTest {
     @Autowired
-    TrainingDAO trainingDAO;
+    UserDAO userDAO;
     @Autowired
     private DataSource dataSource;
     @Autowired
@@ -44,44 +39,45 @@ class TrainingDAOTest {
     }
 
     @Test
-    void testSave() {
-        Training expected = getTestTraining();
-        trainingDAO.save(expected);
-
-        Session session = sessionFactory.getCurrentSession();
-        Training actual = session.get(Training.class, expected.getId());
-
-        assertThat(actual).isEqualTo(expected);
-    }
-
-    @Test
-    void testFindAll() {
-        List<Training> actual = trainingDAO.findAll();
-
-        assertThat(actual).hasSizeGreaterThanOrEqualTo(20);
-    }
-
-    @Test
-    void testFindById() {
-        Optional<Training> actual = trainingDAO.findById(7);
+    void testFindByUsername() {
+        Optional<User> actual = userDAO.findByUsername("alice");
 
         assertThat(actual).isPresent();
-        assertThat(actual.get().getTrainingName()).isEqualTo("Cardio Workout 2");
+        assertThat(actual.get().getUsername()).isEqualTo("alice");
+        assertThat(actual.get().getFirstName()).isEqualTo("Alice");
     }
 
     @Test
-    void testFindByIdNotExist() {
-        Optional<Training> actual = trainingDAO.findById(100);
+    void testFindByUsernameNotExist() {
+        Optional<User> actual = userDAO.findByUsername("no such person");
 
         assertThat(actual).isEmpty();
     }
 
-    private Training getTestTraining() {
-        Session session = sessionFactory.getCurrentSession();
-        Trainee trainee = session.get(Trainee.class, 5L);
-        Trainer trainer = session.get(Trainer.class, 9L);
+    @Test
+    void testFindUsernameOccurencies() {
+        List<String> actual = userDAO.findUsernameOccurencies("alice");
 
-        return new Training(trainee, trainer, "test training", new TrainingType(3, "Yoga"),
-                new Date(), 60);
+        assertThat(actual).hasSize(1).contains("alice");
+    }
+
+    @Test
+    void testFindUsernameOccurenciesNotExist() {
+        List<String> actual = userDAO.findUsernameOccurencies("no such person");
+
+        assertThat(actual).isEmpty();
+    }
+
+    @Test
+    void testChangeActivationStatus() {
+        Session session = sessionFactory.getCurrentSession();
+        User expected = session.get(User.class, 1L);
+        assertThat(expected.isActive()).isTrue();
+
+        userDAO.changeActivationStatus(1);
+        assertThat(expected.isActive()).isFalse();
+
+        userDAO.changeActivationStatus(1);
+        assertThat(expected.isActive()).isTrue();
     }
 }
