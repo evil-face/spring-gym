@@ -24,15 +24,13 @@ public class UserDAO {
         this.sessionFactory = sessionFactory;
     }
 
-    public boolean existsByUsername(String newUsername) {
+    public List<String> findUsernameOccurencies(String newUsername) {
         Session session = sessionFactory.getCurrentSession();
 
-        List<User> users = session.createQuery(
-                        "SELECT u FROM User u WHERE username = :username", User.class)
-                .setParameter("username", newUsername)
+        return session.createQuery(
+                "SELECT username FROM User u WHERE username LIKE :username", String.class)
+                .setParameter("username", newUsername + "%")
                 .getResultList();
-
-        return !users.isEmpty();
     }
 
     public Optional<User> findByUsername(String username) {

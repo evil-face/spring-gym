@@ -6,7 +6,9 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 
 @Service
@@ -20,33 +22,21 @@ public final class UserService {
     }
 
     public String generateUsername(String firstName, String lastName) {
-        String newUsername = null;
+        if (firstName != null && lastName != null) {
+            String clearedFirstName = clearString(firstName);
+            String clearedLastName = clearString(lastName);
+            String newUsername = clearedFirstName + "." + clearedLastName;
 
-        if(firstName != null && lastName != null) {
-            String clearedFirstName = firstName.trim().toLowerCase()
-                    .replace(" ", "")
-                    .replaceAll("\\d", "");
+            List<String> usernames = userDAO.findUsernameOccurencies(newUsername);
+            OptionalInt max = usernames.stream()
+                    .map(s -> s.replace(newUsername, ""))
+                    .mapToInt(s -> s.isEmpty() ? 0 : Integer.parseInt(s))
+                    .max();
 
-            String clearedLastName = lastName.trim().toLowerCase()
-                    .replace(" ", "")
-                    .replaceAll("\\d", "");
-
-            newUsername = clearedFirstName + "." + clearedLastName;
-
-        while (userDAO.existsByUsername(newUsername)) {
-            String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=\\d)");
-            while (userDAO.existsByUsername(newUsername)) {
-                String[] detachedUsername = newUsername.split("(?<=[a-zA-Z])(?=\\d)");
-
-                if (detachedUsername.length == 1) {
-                    newUsername = detachedUsername[0] + "1";
-                } else {
-                    newUsername = detachedUsername[0] + (Integer.parseInt(detachedUsername[1]) + 1);
-                }
-            }
+            return max.isEmpty() ? newUsername : newUsername + (max.getAsInt() + 1);
+        } else {
+            return "";
         }
-
-        return newUsername;
     }
 
     public String generatePassword() {
@@ -55,5 +45,10 @@ public final class UserService {
 
     public Optional<User> findByUsername(String username) {
         return userDAO.findByUsername(username);
+    }
+    private static String clearString(String s) {
+        return s.trim().toLowerCase()
+                .replace(" ", "")
+                .replaceAll("\\d", "");
     }
 }
