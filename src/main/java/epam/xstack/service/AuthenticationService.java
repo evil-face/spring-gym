@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class AuthenticationService {
+public final class AuthenticationService {
     private final UserService userService;
 
     @Autowired

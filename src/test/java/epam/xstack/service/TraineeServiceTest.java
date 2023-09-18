@@ -364,8 +364,10 @@ class TraineeServiceTest {
         List<Trainer> actual = traineeService.getPotentialTrainersForTrainee(
                 getTestTrainee().getUsername(), login, password);
 
-        assertThat(actual).hasSize(2);
-        assertThat(actual).contains(getTestTrainer3()).contains(getTestTrainer4());
+        assertThat(actual)
+                .hasSize(2)
+                .contains(getTestTrainer3())
+                .contains(getTestTrainer4());
     }
 
     private Trainee getTestTrainee() {

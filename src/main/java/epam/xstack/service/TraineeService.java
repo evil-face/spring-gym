@@ -20,6 +20,7 @@ import java.util.Set;
 
 @Service
 public final class TraineeService {
+    public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TraineeDAO traineeDAO;
     private final UserService userService;
     private final TrainerService trainerService;
@@ -49,7 +50,7 @@ public final class TraineeService {
 
         Set<String> violations = validator.validate(trainee);
         if (!violations.isEmpty()) {
-            LOGGER.info("Could not save new trainee because of violations: " + violations);
+            LOGGER.info("Could not save new trainee because of violations: {}", violations);
             throw new ValidationException();
         }
 
@@ -62,7 +63,7 @@ public final class TraineeService {
             return traineeDAO.findAll();
         } else {
             LOGGER.info("Failed attempt to show all trainees with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -71,19 +72,20 @@ public final class TraineeService {
             return traineeDAO.findById(id);
         } else {
             LOGGER.info("Failed attempt to find trainee by id with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public Optional<Trainee> findByUsername(String query, String username, String password) throws AuthenticationException {
+    public Optional<Trainee> findByUsername(String query, String username, String password)
+            throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             Optional<User> user = userService.findByUsername(query);
 
-            return user.isPresent() && user.get() instanceof Trainee ?
-                    Optional.of((Trainee) user.get()) : Optional.empty();
+            return user.isPresent() && user.get() instanceof Trainee trainee
+                    ? Optional.of(trainee) : Optional.empty();
         } else {
             LOGGER.info("Failed attempt to find trainee by username with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -91,7 +93,7 @@ public final class TraineeService {
         if (authService.authenticate(username, password)) {
             Set<String> violations = validator.validate(trainee);
             if (!violations.isEmpty()) {
-                LOGGER.info("Could not update trainee because of violations: " + violations);
+                LOGGER.info("Could not update trainee because of violations: {}", violations);
                 throw new ValidationException();
             }
 
@@ -99,7 +101,7 @@ public final class TraineeService {
             LOGGER.info("Updated trainee with id {} in the DB", trainee.getId());
         } else {
             LOGGER.info("Failed attempt update trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -109,26 +111,28 @@ public final class TraineeService {
             LOGGER.info("Deleted trainee with id {} from the DB", trainee.getId());
         } else {
             LOGGER.info("Failed attempt to delete trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public void deleteByUsername(String usernameToDelete, String username, String password) throws AuthenticationException {
+    public void deleteByUsername(String usernameToDelete, String username, String password)
+            throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             traineeDAO.delete(usernameToDelete);
         } else {
             LOGGER.info("Failed attempt to delete trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public void updatePassword(long id, String newPassword, String username, String oldPassword) throws AuthenticationException {
+    public void updatePassword(long id, String newPassword, String username, String oldPassword)
+            throws AuthenticationException {
         if (authService.authenticate(username, oldPassword)) {
             traineeDAO.updatePassword(id, newPassword);
             LOGGER.info("Updated password of trainee with id {} in the DB", id);
         } else {
             LOGGER.info("Failed attempt to update trainee password with credentials {}:{}", username, oldPassword);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -137,24 +141,26 @@ public final class TraineeService {
             userService.changeActivationStatus(id);
             LOGGER.info("Changed trainee activation status for id {}", id);
         } else {
-            LOGGER.info("Failed attempt to change trainee activation status with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            LOGGER.info("Failed attempt to change trainee activation status with credentials {}:{}",
+                    username, password);
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public List<Training> getTrainingsByTraineeUsername(String traineeUsername,
-                                                        String username, String password) throws AuthenticationException {
+    public List<Training> getTrainingsByTraineeUsername(String traineeUsername, String username, String password)
+            throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             return traineeDAO.getTrainingsByTraineeUsername(traineeUsername);
         } else {
             LOGGER.info("Failed attempt to get trainings for trainee {} with credentials {}:{}",
                     traineeUsername, username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public List<Training> getTrainingsByTraineeUsernameAndTrainerUsername(String traineeUsername, String trainerUsername,
-                                                        String username, String password) throws AuthenticationException {
+    public List<Training> getTrainingsByTraineeUsernameAndTrainerUsername(
+            String traineeUsername, String trainerUsername,
+            String username, String password) throws AuthenticationException {
         return getTrainingsByTraineeUsername(traineeUsername, username, password).stream()
                 .filter(training -> training.getTrainer().getUsername().equals(trainerUsername))
                 .toList();

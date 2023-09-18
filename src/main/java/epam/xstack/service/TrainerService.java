@@ -19,6 +19,7 @@ import java.util.Set;
 
 @Service
 public final class TrainerService {
+    public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TrainerDAO trainerDAO;
     private final UserService userService;
     private final AuthenticationService authService;
@@ -44,7 +45,7 @@ public final class TrainerService {
 
         Set<String> violations = validator.validate(trainer);
         if (!violations.isEmpty()) {
-            LOGGER.info("Could not save new trainer because of violations: " + violations);
+            LOGGER.info("Could not save new trainer because of violations: {}", violations);
             throw new ValidationException();
         }
 
@@ -57,7 +58,7 @@ public final class TrainerService {
             return trainerDAO.findAll();
         } else {
             LOGGER.info("Failed attempt to find all trainers with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -66,19 +67,20 @@ public final class TrainerService {
             return trainerDAO.findById(id);
         } else {
             LOGGER.info("Failed attempt to find trainer by id with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public Optional<Trainer> findByUsername(String query, String username, String password) throws AuthenticationException {
+    public Optional<Trainer> findByUsername(String query, String username, String password)
+            throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             Optional<User> user = userService.findByUsername(query);
 
-            return user.isPresent() && user.get() instanceof Trainer ?
-                    Optional.of((Trainer) user.get()) : Optional.empty();
+            return user.isPresent() && user.get() instanceof Trainer trainer
+                    ? Optional.of(trainer) : Optional.empty();
         } else {
             LOGGER.info("Failed attempt to find trainer by username with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -86,7 +88,7 @@ public final class TrainerService {
         if (authService.authenticate(username, password)) {
             Set<String> violations = validator.validate(trainer);
             if (!violations.isEmpty()) {
-                LOGGER.info("Could not update trainer because of violations: " + violations);
+                LOGGER.info("Could not update trainer because of violations: {}", violations);
                 throw new ValidationException();
             }
 
@@ -94,17 +96,18 @@ public final class TrainerService {
             LOGGER.info("Updated trainer with id {} in the DB", trainer.getId());
         } else {
             LOGGER.info("Failed attempt update trainer with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public void updatePassword(long id, String newPassword, String username, String oldPassword) throws AuthenticationException {
+    public void updatePassword(long id, String newPassword, String username, String oldPassword)
+            throws AuthenticationException {
         if (authService.authenticate(username, oldPassword)) {
             trainerDAO.updatePassword(id, newPassword);
             LOGGER.info("Updated password of trainer with id {} in the DB", id);
         } else {
             LOGGER.info("Failed attempt to update trainer password with credentials {}:{}", username, oldPassword);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -113,24 +116,26 @@ public final class TrainerService {
             userService.changeActivationStatus(id);
             LOGGER.info("Changed trainer activation status for id {}", id);
         } else {
-            LOGGER.info("Failed attempt to change trainer activation status with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            LOGGER.info("Failed attempt to change trainer activation status with credentials {}:{}",
+                    username, password);
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public List<Training> getTrainingsByTrainerUsername(String trainerUsername,
-                                                        String username, String password) throws AuthenticationException {
+    public List<Training> getTrainingsByTrainerUsername(String trainerUsername, String username, String password)
+            throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             return trainerDAO.getTrainingsByTrainerUsername(trainerUsername);
         } else {
             LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
                     trainerUsername, username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
-    public List<Training> getTrainingsByTrainerUsernameAndTraineeUsername(String trainerUsername, String traineeUsername,
-                                                                          String username, String password) throws AuthenticationException {
+    public List<Training> getTrainingsByTrainerUsernameAndTraineeUsername(
+            String trainerUsername, String traineeUsername,
+            String username, String password) throws AuthenticationException {
         return getTrainingsByTrainerUsername(trainerUsername, username, password).stream()
                 .filter(training -> training.getTrainee().getUsername().equals(traineeUsername))
                 .toList();

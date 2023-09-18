@@ -23,7 +23,7 @@ import java.util.Optional;
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class UserDAOTest {
+class UserDAOTest {
     @Autowired
     UserDAO userDAO;
     @Autowired

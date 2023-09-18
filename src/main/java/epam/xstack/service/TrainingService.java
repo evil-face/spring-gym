@@ -17,6 +17,7 @@ import java.util.Optional;
 
 @Service
 public final class TrainingService {
+    public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TrainingDAO trainingDAO;
     private final AuthenticationService authService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingService.class);
@@ -36,7 +37,7 @@ public final class TrainingService {
             LOGGER.info("Saved new training with id {} to the DB", training.getId());
         } else {
             LOGGER.info("Failed attempt to create new training with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
 
     }
@@ -46,7 +47,7 @@ public final class TrainingService {
             return trainingDAO.findAll();
         } else {
             LOGGER.info("Failed attempt to find all trainings with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 
@@ -55,7 +56,7 @@ public final class TrainingService {
             return trainingDAO.findById(id);
         } else {
             LOGGER.info("Failed attempt to find training by id with credentials {}:{}", username, password);
-            throw new AuthenticationException("Authentication failed");
+            throw new AuthenticationException(AUTHENTICATION_FAILED);
         }
     }
 }
