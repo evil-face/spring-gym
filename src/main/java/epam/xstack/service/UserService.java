@@ -46,6 +46,11 @@ public final class UserService {
     public Optional<User> findByUsername(String username) {
         return userDAO.findByUsername(username);
     }
+
+    public void changeActivationStatus(long id) {
+        userDAO.changeActivationStatus(id);
+    }
+
     private static String clearString(String s) {
         return s.trim().toLowerCase()
                 .replace(" ", "")
