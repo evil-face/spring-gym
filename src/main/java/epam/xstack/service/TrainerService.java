@@ -121,7 +121,7 @@ public final class TrainerService {
     public List<Training> getTrainingsByTrainerUsername(String trainerUsername,
                                                         String username, String password) throws AuthenticationException {
         if (authService.authenticate(username, password)) {
-            return trainerDAO.getTrainingsByTraineeUsername(trainerUsername);
+            return trainerDAO.getTrainingsByTrainerUsername(trainerUsername);
         } else {
             LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
                     trainerUsername, username, password);

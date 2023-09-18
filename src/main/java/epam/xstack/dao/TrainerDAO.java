@@ -71,7 +71,7 @@ public class TrainerDAO {
         }
     }
 
-    public List<Training> getTrainingsByTraineeUsername(String trainerUsername) {
+    public List<Training> getTrainingsByTrainerUsername(String trainerUsername) {
         Session session = sessionFactory.getCurrentSession();
         Trainer trainer = null;
 
