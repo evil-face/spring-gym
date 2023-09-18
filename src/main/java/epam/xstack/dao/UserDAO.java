@@ -18,7 +18,7 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class UserDAO {
     private final SessionFactory sessionFactory;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrainingDAO.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAO.class);
     @Autowired
     public UserDAO(SessionFactory sessionFactory) {
         this.sessionFactory = sessionFactory;
