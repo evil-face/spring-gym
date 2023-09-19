@@ -1,5 +1,7 @@
 package epam.xstack.dao;
 
+import epam.xstack.model.Trainee;
+import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -25,6 +27,15 @@ public class TrainingDAO {
     @Transactional
     public void save(Training training) {
         Session session = sessionFactory.getCurrentSession();
+        Trainee trainee = training.getTrainee();
+        Trainer trainer = training.getTrainer();
+
+        trainee.getTrainers().add(trainer);
+        trainer.getTrainees().add(trainee);
+
+        session.merge(trainee);
+        session.merge(trainer);
+
         session.persist(training);
     }
 

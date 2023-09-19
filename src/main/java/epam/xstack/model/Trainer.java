@@ -2,11 +2,13 @@ package epam.xstack.model;
 
 import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @Entity
 public final class Trainer extends User {
@@ -17,6 +19,9 @@ public final class Trainer extends User {
 
     @OneToMany(mappedBy = "trainer")
     private List<Training> trainingList;
+
+    @ManyToMany(mappedBy = "trainers")
+    private Set<Trainee> trainees;
 
     public Trainer(String firstName, String lastName,
                    String username, String password, boolean isActive, TrainingType specialization) {
@@ -41,6 +46,14 @@ public final class Trainer extends User {
 
     public void setTrainingList(List<Training> trainingList) {
         this.trainingList = trainingList;
+    }
+
+    public Set<Trainee> getTrainees() {
+        return trainees;
+    }
+
+    public void setTrainees(Set<Trainee> trainees) {
+        this.trainees = trainees;
     }
 
     @Override
