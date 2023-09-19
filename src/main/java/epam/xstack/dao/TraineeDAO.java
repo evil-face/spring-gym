@@ -53,6 +53,27 @@ public class TraineeDAO {
         return trainee == null ? Optional.empty() : Optional.of(trainee);
     }
 
+    public Optional<Trainee> findByUsername(String username) {
+        Session session = sessionFactory.getCurrentSession();
+        Trainee trainee = null;
+
+        try {
+            trainee = session.createQuery(
+                            "SELECT t FROM Trainee t WHERE t.username = :username", Trainee.class)
+                    .setParameter("username", username)
+                    .getSingleResult();
+            Hibernate.initialize(trainee.getTrainers());
+        } catch (NonUniqueResultException | NoResultException e) {
+            LOGGER.warn("Either no trainees or several trainees were found for username {}", username);
+        }
+
+        if (trainee == null) {
+            LOGGER.warn("No records found for username {}", username);
+        }
+
+        return trainee == null ? Optional.empty() : Optional.of(trainee);
+    }
+
     @Transactional
     public void update(Trainee updatedTrainee) {
         Session session = sessionFactory.getCurrentSession();

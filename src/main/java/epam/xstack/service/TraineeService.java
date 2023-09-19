@@ -169,14 +169,12 @@ public final class TraineeService {
     public List<Trainer> getPotentialTrainersForTrainee(String traineeUsername, String username, String password)
             throws AuthenticationException {
         List<Trainer> allTrainers = trainerService.findAll(username, password);
+        Optional<Trainee> traineeOpt = traineeDAO.findByUsername(traineeUsername);
 
-        List<Training> trainings = getTrainingsByTraineeUsername(traineeUsername, username, password);
-
-        List<Trainer> assignedTrainers = trainings.stream()
-                .map(Training::getTrainer)
-                .toList();
-
-        allTrainers.removeAll(assignedTrainers);
+        if (traineeOpt.isPresent()) {
+            Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
+            allTrainers.removeAll(assignedTrainers);
+        }
 
         return allTrainers.stream().filter(Trainer::isActive).toList();
     }

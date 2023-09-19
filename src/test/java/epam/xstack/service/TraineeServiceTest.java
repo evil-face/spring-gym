@@ -356,13 +356,14 @@ class TraineeServiceTest {
         String login = "test";
         String password = "test";
         List<Trainer> allTestTrainers = getAllTestTrainers();
+        Trainee trainee = getTestTrainee();
+        trainee.setTrainers(Set.of(getTestTrainer1(), getTestTrainer2()));
 
         when(trainerService.findAll(login, password)).thenReturn(allTestTrainers);
-        when(authService.authenticate(login, password)).thenReturn(true);
-        when(traineeDAO.getTrainingsByTraineeUsername(getTestTrainee().getUsername())).thenReturn(getTestTrainings());
+        when(traineeDAO.findByUsername(trainee.getUsername())).thenReturn(Optional.of(trainee));
 
         List<Trainer> actual = traineeService.getPotentialTrainersForTrainee(
-                getTestTrainee().getUsername(), login, password);
+                trainee.getUsername(), login, password);
 
         assertThat(actual)
                 .hasSize(2)
