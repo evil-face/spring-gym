@@ -1,8 +1,5 @@
 package epam.xstack.model;
 
-
-import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -10,9 +7,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
@@ -31,16 +26,14 @@ public final class Training {
     @ManyToOne
     @JoinColumn(name = "training_type", referencedColumnName = "id")
     private TrainingType trainingType;
-    @Temporal(value = TemporalType.DATE)
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Column(nullable = false)
-    private Date trainingDate;
+    private LocalDate trainingDate;
     @Column
     private int trainingDuration;
 
     public Training(Trainee trainee, Trainer trainer,
                     String trainingName, TrainingType trainingType,
-                    Date trainingDate, int trainingDuration) {
+                    LocalDate trainingDate, int trainingDuration) {
         this.trainee = trainee;
         this.trainer = trainer;
         this.trainingName = trainingName;
@@ -92,11 +85,11 @@ public final class Training {
         this.trainingType = trainingType;
     }
 
-    public Date getTrainingDate() {
+    public LocalDate getTrainingDate() {
         return trainingDate;
     }
 
-    public void setTrainingDate(Date trainingDate) {
+    public void setTrainingDate(LocalDate trainingDate) {
         this.trainingDate = trainingDate;
     }
 

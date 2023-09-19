@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.AuthenticationException;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -119,12 +119,12 @@ class TrainingServiceTest {
 
     private Training getTestTraining() {
         return new Training(getTestTrainee(), getTestTrainer(),
-                "First visit", getTestTrainingType(), new Date(), 60);
+                "First visit", getTestTrainingType(), LocalDate.now(), 60);
     }
 
     private Trainee getTestTrainee() {
         return new Trainee("Weak", "Dude", "weak.dude",
-                "weakpassword", true, new Date(), "Weak city");
+                "weakpassword", true, LocalDate.now(), "Weak city");
     }
 
     private Trainer getTestTrainer() {
@@ -139,15 +139,15 @@ class TrainingServiceTest {
     private List<Training> getTestTrainings() {
         return List.of(
                 new Training(getTestTrainee(), getTestTrainer(), "First visit",
-                        getTestTrainingType(), new Date(), 60),
+                        getTestTrainingType(), LocalDate.now(), 60),
                 new Training(getTestTrainee(), getTestTrainer(), "Second visit",
-                        getTestTrainingType(), new Date(), 90),
+                        getTestTrainingType(), LocalDate.now(), 90),
                 new Training(getTestTrainee(), getTestTrainer(), "Third visit",
-                        getTestTrainingType(), new Date(), 120),
+                        getTestTrainingType(), LocalDate.now(), 120),
                 new Training(getTestTrainee(), getTestTrainer(), "First visit",
-                        getTestTrainingType(), new Date(), 200),
+                        getTestTrainingType(), LocalDate.now(), 200),
                 new Training(getTestTrainee(), getTestTrainer(), "Second visit",
-                        getTestTrainingType(), new Date(), 200)
+                        getTestTrainingType(), LocalDate.now(), 200)
         );
     }
 }

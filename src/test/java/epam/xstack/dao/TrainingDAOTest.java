@@ -18,7 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.sql.DataSource;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -82,6 +82,6 @@ class TrainingDAOTest {
         Trainer trainer = session.get(Trainer.class, 9L);
 
         return new Training(trainee, trainer, "test training", new TrainingType(3, "Yoga"),
-                new Date(), 60);
+                LocalDate.now(), 60);
     }
 }

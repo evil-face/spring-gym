@@ -15,8 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.AuthenticationException;
 import javax.validation.ValidationException;
+import java.time.LocalDate;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -312,12 +312,12 @@ class TrainerServiceTest {
 
     private Trainee getTestTrainee1() {
         return new Trainee("Weak", "Dude", "weak.dude",
-                "weakpassword", true, new Date(), "Weak city");
+                "weakpassword", true, LocalDate.now(), "Weak city");
     }
 
     private Trainee getTestTrainee2() {
         return new Trainee("Strong", "Dude", "strong.dude",
-                "strongpassword", true, new Date(), "Strong city");
+                "strongpassword", true, LocalDate.now(), "Strong city");
     }
 
     private TrainingType getTestTrainingType() {
@@ -343,15 +343,15 @@ class TrainerServiceTest {
     private List<Training> getTestTrainings() {
         return List.of(
                 new Training(getTestTrainee1(), getTestTrainer(), "First visit",
-                        getTestTrainingType(), new Date(), 60),
+                        getTestTrainingType(), LocalDate.now(), 60),
                 new Training(getTestTrainee1(), getTestTrainer(), "Second visit",
-                        getTestTrainingType(), new Date(), 90),
+                        getTestTrainingType(), LocalDate.now(), 90),
                 new Training(getTestTrainee1(), getTestTrainer(), "Third visit",
-                        getTestTrainingType(), new Date(), 120),
+                        getTestTrainingType(), LocalDate.now(), 120),
                 new Training(getTestTrainee2(), getTestTrainer(), "First visit",
-                        getTestTrainingType(), new Date(), 200),
+                        getTestTrainingType(), LocalDate.now(), 200),
                 new Training(getTestTrainee2(), getTestTrainer(), "Second visit",
-                        getTestTrainingType(), new Date(), 200)
+                        getTestTrainingType(), LocalDate.now(), 200)
         );
     }
 }

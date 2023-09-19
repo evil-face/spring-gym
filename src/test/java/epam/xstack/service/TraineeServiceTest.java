@@ -15,9 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import javax.naming.AuthenticationException;
 import javax.validation.ValidationException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -56,7 +56,7 @@ class TraineeServiceTest {
                         trainee.getFirstName(),
                         trainee.getLastName(),
                         true,
-                        new Date(TEST_DATE),
+                        LocalDate.now(),
                         trainee.getAddress()));
     }
 
@@ -74,7 +74,7 @@ class TraineeServiceTest {
                         badTrainee.getFirstName(),
                         badTrainee.getLastName(),
                         true,
-                        new Date(TEST_DATE),
+                        LocalDate.now(),
                         badTrainee.getAddress()));
     }
 
@@ -373,7 +373,7 @@ class TraineeServiceTest {
     private Trainee getTestTrainee() {
         return new Trainee("Miguel", "Rodriguez",
                 "miguel.rodriguez", "qwerty", true,
-                new Date(TEST_DATE), "Mexico");
+                LocalDate.of(1990, 10, 20), "Mexico");
     }
 
     private Trainer getTestTrainer1() {
@@ -407,20 +407,20 @@ class TraineeServiceTest {
     private Trainee getBadTrainee() {
         return new Trainee("M", "",
                 null, "qwerty", true,
-                new Date(), "Mexico");
+                LocalDate.now(), "Mexico");
     }
 
     private List<Trainee> getTestTrainees() {
         return List.of(
                 new Trainee("Miguel", "Rodriguez",
                         "miguel.rodriguez", "qwerty", true,
-                        new Date(TEST_DATE), "Mexico"),
+                        LocalDate.now(), "Mexico"),
                 new Trainee("Michael", "Shawn",
                         "michael.shawn", "wweerr", true,
-                        new Date(TEST_DATE), "London"),
+                        LocalDate.now(), "London"),
                 new Trainee("Ivan", "Popkov",
                         "ivan.popkov", "pass", true,
-                        new Date(TEST_DATE), "Ivangorod")
+                        LocalDate.now(), "Ivangorod")
         );
     }
 
@@ -436,11 +436,11 @@ class TraineeServiceTest {
     private List<Training> getTestTrainings() {
         return List.of(
                 new Training(getTestTrainee(), getTestTrainer1(), "First visit",
-                        getTestTrainingType(), new Date(), 60),
+                        getTestTrainingType(), LocalDate.now(), 60),
                 new Training(getTestTrainee(), getTestTrainer1(), "Second visit",
-                        getTestTrainingType(), new Date(), 90),
+                        getTestTrainingType(), LocalDate.now(), 90),
                 new Training(getTestTrainee(), getTestTrainer2(), "Third visit",
-                        getTestTrainingType(), new Date(), 120)
+                        getTestTrainingType(), LocalDate.now(), 120)
         );
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
 import javax.validation.ValidationException;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -40,7 +40,7 @@ public final class TraineeService {
     }
 
     public void createTrainee(String firstName, String lastName,
-                                 boolean isActive, Date dateOfBirth, String address) {
+                              boolean isActive, LocalDate dateOfBirth, String address) {
         String username = userService.generateUsername(firstName, lastName);
         String password = userService.generatePassword();
 

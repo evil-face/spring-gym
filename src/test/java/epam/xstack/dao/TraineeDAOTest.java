@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -147,12 +147,12 @@ class TraineeDAOTest {
 
     private Trainee getTestTrainee() {
         return new Trainee("testname", "testsurname", "testname.testsurname", "testpassword",
-                true, new Date(), "testcity");
+                true, LocalDate.now().minusDays(1), "testcity");
     }
 
     private Trainee getTestTraineeForDeletion() {
         return new Trainee("deleteme", "deleteme", "deleteme.deleteme", "deleteme",
-                true, new Date(), "deleteme");
+                true, LocalDate.now().minusDays(1), "deleteme");
     }
 
     private Trainee getTraineeForUpdate() {

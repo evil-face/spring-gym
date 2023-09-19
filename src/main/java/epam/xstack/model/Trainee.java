@@ -1,27 +1,17 @@
 package epam.xstack.model;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.*;
 import javax.validation.constraints.Past;
 
-import org.springframework.format.annotation.DateTimeFormat;
-
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
 
 @Entity
 public final class Trainee extends User {
-
-    @Temporal(value = TemporalType.DATE)
-    @DateTimeFormat(pattern = "dd/MM/yyyy")
     @Past(message = "Date of birth must be in the past")
-    private Date dateOfBirth;
+    private LocalDate dateOfBirth;
     @Column
     private String address;
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.REMOVE)
@@ -29,7 +19,7 @@ public final class Trainee extends User {
 
     public Trainee(String firstName, String lastName,
                    String username, String password, boolean isActive,
-                   Date dateOfBirth, String address) {
+                   LocalDate dateOfBirth, String address) {
         super(firstName, lastName, username, password, isActive);
         this.dateOfBirth = dateOfBirth;
         this.address = address;
@@ -38,11 +28,11 @@ public final class Trainee extends User {
     public Trainee() {
     }
 
-    public Date getDateOfBirth() {
+    public LocalDate getDateOfBirth() {
         return dateOfBirth;
     }
 
-    public void setDateOfBirth(Date dateOfBirth) {
+    public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
     }
 

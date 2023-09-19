@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +29,7 @@ public final class TrainingService {
     }
 
     public void createTraining(Trainee trainee, Trainer trainer, String name,
-                                   TrainingType type, Date date, int duration,
+                               TrainingType type, LocalDate date, int duration,
                                String username, String password) throws AuthenticationException {
         if (authService.authenticate(username, password)) {
             Training training = new Training(trainee, trainer, name, type, date, duration);
