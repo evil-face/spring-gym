@@ -1,5 +1,6 @@
 package epam.xstack.config;
 
+import epam.xstack.interceptor.RequestLoggingInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -11,6 +12,9 @@ import org.springframework.orm.hibernate5.HibernateTransactionManager;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -19,8 +23,17 @@ import java.util.Properties;
 @ComponentScan("epam.xstack")
 @PropertySource("classpath:application.properties")
 @EnableTransactionManagement
-public class Config {
+@EnableWebMvc
+public class Config implements WebMvcConfigurer {
     private final Environment env;
+
+    @Autowired
+    private RequestLoggingInterceptor requestLoggingInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(requestLoggingInterceptor);
+    }
 
     @Autowired
     public Config(Environment env) {
