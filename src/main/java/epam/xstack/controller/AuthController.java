@@ -79,8 +79,8 @@ public class AuthController {
             LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
             return ResponseEntity.ok().build();
         } else {
-            LOGGER.info("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY, txID);
-            return ResponseEntity.unprocessableEntity().build();
+            LOGGER.info("TX ID: {} — " + HttpStatus.NOT_FOUND, txID);
+            return ResponseEntity.notFound().build();
         }
 
     }
