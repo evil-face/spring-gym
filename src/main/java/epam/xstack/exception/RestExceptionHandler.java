@@ -44,4 +44,20 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    protected ResponseEntity<String> handleNotFound(RuntimeException e) {
+        LOGGER.warn("TX ID: {} — {}", e.getMessage(), HttpStatus.NOT_FOUND);
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    }
+
+    @ExceptionHandler(NoSuchTrainerExistException.class)
+    protected ResponseEntity<String> handleBadTrainerInput(RuntimeException e) {
+        String errorBody = "No such trainer exists";
+        LOGGER.warn("TX ID: {} — {} — {}", e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+
+        return ResponseEntity.unprocessableEntity()
+                .body(errorBody);
+    }
 }
