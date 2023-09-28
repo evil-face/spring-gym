@@ -1,5 +1,7 @@
 package epam.xstack.service;
 
+import epam.xstack.dto.auth.PasswordChangeRequestDTO;
+import epam.xstack.exception.ForbiddenException;
 import epam.xstack.exception.UnauthorizedException;
 import epam.xstack.model.User;
 import org.slf4j.Logger;
@@ -20,26 +22,32 @@ public final class AuthenticationService {
         this.userService = userService;
     }
 
-    public boolean authenticate(String txID, String username, String password) {
+    public boolean authenticate(String txID, long id, String username, String password) {
         Optional<User> user = userService.findByUsername(txID, username);
 
-        if (user.isPresent()) {
-            User principal = user.get();
+        if (user.isEmpty()) {
+            LOGGER.warn("TX ID: {} — No user was found to authenticate with username {}", txID, username);
+            throw new UnauthorizedException(txID);
+        }
 
-            if (principal.getUsername().equals(username) && principal.getPassword().equals(password)) {
+        User principal = user.get();
+
+        if (principal.getPassword().equals(password)) {
+            if (principal.getId() == id) {
                 return true;
             } else {
-                throw new UnauthorizedException(txID);
+                LOGGER.warn("TX ID: {} — Attempt to perform an action with no access with username {}", txID, username);
+                throw new ForbiddenException(txID);
             }
         } else {
-            LOGGER.warn("TX ID: {} — No user was found to authenticate with username {}", txID, username);
+            LOGGER.warn("TX ID: {} — Bad login attempt with username {}", txID, username);
             throw new UnauthorizedException(txID);
         }
     }
 
-    public boolean updatePassword(String txID, String username, String oldPassword, String newPassword) throws AuthenticationException {
-        if (authenticate(txID, username, oldPassword)) {
-            return userService.updatePassword(txID, username, newPassword);
+    public boolean updatePassword(String txID, long id, PasswordChangeRequestDTO requestDTO) {
+        if (authenticate(txID, id, requestDTO.getUsername(), requestDTO.getOldPassword())) {
+            return userService.updatePassword(txID, requestDTO.getUsername(), requestDTO.getNewPassword());
         }
 
         return false;

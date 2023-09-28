@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,8 +37,10 @@ public class AuthController {
         this.modelMapper = modelMapper;
     }
 
-    @GetMapping
-    public ResponseEntity<?> login(@RequestBody @Valid AuthDTO authDTO, BindingResult bindingResult,
+    @GetMapping("/{id}")
+    public ResponseEntity<?> login(@PathVariable("id") long id,
+                                   @RequestBody @Valid AuthDTO authDTO,
+                                   BindingResult bindingResult,
                                    HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
@@ -50,7 +53,7 @@ public class AuthController {
 
         User user = modelMapper.map(authDTO, User.class);
 
-        if (authService.authenticate(txID, user.getUsername(), user.getPassword())) {
+        if (authService.authenticate(txID, id, user.getUsername(), user.getPassword())) {
             LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
 
             return ResponseEntity.ok().build();
@@ -59,8 +62,9 @@ public class AuthController {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    @PutMapping
-    public ResponseEntity<?> handleChangePassword(@RequestBody @Valid PasswordChangeRequestDTO request,
+    @PutMapping("/{id}")
+    public ResponseEntity<?> handleChangePassword(@PathVariable("id") long id,
+                                                  @RequestBody @Valid PasswordChangeRequestDTO requestDTO,
                                                   BindingResult bindingResult,
                                                   HttpServletRequest httpServletRequest) throws AuthenticationException {
         String txID = (String) httpServletRequest.getAttribute("txID");
@@ -72,8 +76,7 @@ public class AuthController {
             return ResponseEntity.unprocessableEntity().body(errors);
         }
 
-        boolean success = authService.updatePassword(txID, request.getUsername(),
-                request.getOldPassword(), request.getNewPassword());
+        boolean success = authService.updatePassword(txID, id, requestDTO);
 
         if (success) {
             LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);

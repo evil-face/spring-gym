@@ -98,18 +98,13 @@ public class TraineeDAO {
         if (existingTrainee == null) {
             LOGGER.warn("TX ID: {} — Could not update trainee with ID '{}' and username '{}' because it wasn't found",
                     txID, updatedTrainee.getId(), updatedTrainee.getUsername());
-        } else if (existingTrainee.getUsername().equals(updatedTrainee.getUsername())) {
+        } else {
             Hibernate.initialize(existingTrainee.getTrainers());
             updateFields(existingTrainee, updatedTrainee);
             session.merge(existingTrainee);
 
             LOGGER.info("TX ID: {} — Successfully updated trainee with username '{}' and id '{}'",
                     txID, existingTrainee.getUsername(), existingTrainee.getId());
-        } else {
-            LOGGER.info("TX ID: {} — Trying to update trainee with non-matching username '{}' and id '{}'",
-                    txID, updatedTrainee.getUsername(), updatedTrainee.getId());
-
-            throw new ForbiddenException(txID);
         }
 
         return Optional.ofNullable(existingTrainee);
@@ -125,11 +120,6 @@ public class TraineeDAO {
                     txID, traineeToDelete.getId());
 
             throw new EntityNotFoundException(txID);
-        } else if (!existingTrainee.getUsername().equals(traineeToDelete.getUsername())) {
-            LOGGER.info("TX ID: {} — Trying to delete trainee with non-matching username '{}' and id '{}'",
-                    txID, traineeToDelete.getUsername(), traineeToDelete.getId());
-
-            throw new ForbiddenException(txID);
         }
 
         session.remove(existingTrainee);
@@ -148,11 +138,6 @@ public class TraineeDAO {
                     txID, id);
 
             throw new EntityNotFoundException(txID);
-        } else if (!trainee.getUsername().equals(username)) {
-            LOGGER.info("TX ID: {} — Trying to change status of trainee with non-matching username '{}' and id '{}'",
-                    txID, username, id);
-
-            throw new ForbiddenException(txID);
         }
 
         trainee.setIsActive(newStatus);
@@ -165,10 +150,9 @@ public class TraineeDAO {
         Session session = sessionFactory.getCurrentSession();
 
         Trainee trainee = session.get(Trainee.class, id);
+
         if (trainee == null) {
             throw new EntityNotFoundException(txID);
-        } else if (!trainee.getUsername().equals(criteria.getUsername())) {
-            throw new ForbiddenException(txID);
         }
 
         CriteriaQuery<Training> cr = buildCriteriaQuery(session, txID, id, criteria);

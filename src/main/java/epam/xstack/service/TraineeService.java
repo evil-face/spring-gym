@@ -4,14 +4,11 @@ import epam.xstack.dao.TraineeDAO;
 import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
 import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
-import epam.xstack.exception.ForbiddenException;
 import epam.xstack.exception.NoSuchTrainerExistException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,12 +19,10 @@ import java.util.Set;
 
 @Service
 public final class TraineeService {
-    public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TraineeDAO traineeDAO;
     private final UserService userService;
     private final TrainerService trainerService;
     private final AuthenticationService authService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TraineeService.class);
 
     @Autowired
     public TraineeService(TraineeDAO traineeDAO, UserService userService,
@@ -63,7 +58,7 @@ public final class TraineeService {
 //    }
 
     public Optional<Trainee> findById(String txID, long id, String username, String password) {
-        if (authService.authenticate(txID, username, password)) {
+        if (authService.authenticate(txID, id, username, password)) {
             return traineeDAO.findById(txID, id);
         }
 
@@ -71,7 +66,7 @@ public final class TraineeService {
     }
 
     public Optional<Trainee> update(String txID, Trainee updatedTrainee, String username, String password) {
-        if (authService.authenticate(txID, username, password)) {
+        if (authService.authenticate(txID, updatedTrainee.getId(), username, password)) {
             return traineeDAO.update(txID, updatedTrainee);
         }
 
@@ -79,13 +74,14 @@ public final class TraineeService {
     }
 
     public void delete(String txID, Trainee traineeToDelete) {
-        if (authService.authenticate(txID, traineeToDelete.getUsername(), traineeToDelete.getPassword())) {
+        if (authService.authenticate(txID, traineeToDelete.getId(),
+                traineeToDelete.getUsername(), traineeToDelete.getPassword())) {
             traineeDAO.delete(txID, traineeToDelete);
         }
     }
 
     public void changeActivationStatus(String txID, long id, Boolean newStatus, String username, String password) {
-        if (authService.authenticate(txID, username, password)) {
+        if (authService.authenticate(txID, id, username, password)) {
             traineeDAO.changeActivationStatus(txID, id, newStatus, username);
         }
     }
@@ -103,7 +99,7 @@ public final class TraineeService {
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
                                                     TrainingGetListForTraineeRequestDTO requestDTO) {
-        if (authService.authenticate(txID, username, password)) {
+        if (authService.authenticate(txID, id, username, password)) {
             return traineeDAO.getTrainingsWithFiltering(txID, id, requestDTO);
         }
 
@@ -111,21 +107,24 @@ public final class TraineeService {
     }
 
     public List<Trainer> getPotentialTrainersForTrainee(String txID, long id, String username, String password) {
-        List<Trainer> allTrainers = trainerService.findAll(txID);
-        Optional<Trainee> traineeOpt = traineeDAO.findByUsername(txID, username);
+        if (authService.authenticate(txID, id, username, password)) {
+            Optional<Trainee> traineeOpt = traineeDAO.findByUsername(txID, username);
 
-        if (traineeOpt.isEmpty()) {
-            throw new EntityNotFoundException(txID);
-        } else if (traineeOpt.get().getId() != id) {
-            throw new ForbiddenException(txID);
+            if (traineeOpt.isEmpty()) {
+                throw new EntityNotFoundException(txID);
+            }
+
+            List<Trainer> allTrainers = trainerService.findAll(txID);
+            Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
+            allTrainers.removeAll(assignedTrainers);
+
+            return allTrainers.stream().filter(Trainer::getIsActive).toList();
         }
 
-        Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
-        allTrainers.removeAll(assignedTrainers);
-
-        return allTrainers.stream().filter(Trainer::getIsActive).toList();
+        return new ArrayList<>();
     }
 
+    // no auth in task requirements!
     public List<Trainer> updateTrainerList(String txID, long id, TraineeUpdateTrainerListRequestDTO requestDTO) {
         List<Trainer> allTrainers = trainerService.findAll(txID);
 
