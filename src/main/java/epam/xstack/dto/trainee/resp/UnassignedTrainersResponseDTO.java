@@ -1,4 +1,4 @@
-package epam.xstack.dto.trainee;
+package epam.xstack.dto.trainee.resp;
 
 import epam.xstack.model.TrainingType;
 

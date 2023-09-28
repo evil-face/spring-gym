@@ -1,4 +1,4 @@
-package epam.xstack.dto.trainee;
+package epam.xstack.dto.trainee.req;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;

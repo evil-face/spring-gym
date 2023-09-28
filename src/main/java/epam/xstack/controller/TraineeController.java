@@ -1,13 +1,13 @@
 package epam.xstack.controller;
 
-import epam.xstack.dto.trainee.TraineeActivationRequestDTO;
-import epam.xstack.dto.trainee.TraineeCreateRequestDTO;
-import epam.xstack.dto.trainee.TraineeGetResponseDTO;
+import epam.xstack.dto.trainee.req.TraineeActivationRequestDTO;
+import epam.xstack.dto.trainee.req.TraineeCreateRequestDTO;
+import epam.xstack.dto.trainee.resp.TraineeGetResponseDTO;
 import epam.xstack.dto.auth.AuthDTO;
-import epam.xstack.dto.trainee.TraineeUpdateRequestDTO;
-import epam.xstack.dto.trainee.TraineeUpdateResponseDTO;
-import epam.xstack.dto.trainee.TraineeUpdateTrainerListRequestDTO;
-import epam.xstack.dto.trainee.UnassignedTrainersResponseDTO;
+import epam.xstack.dto.trainee.req.TraineeUpdateRequestDTO;
+import epam.xstack.dto.trainee.resp.TraineeUpdateResponseDTO;
+import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
+import epam.xstack.dto.trainee.resp.UnassignedTrainersResponseDTO;
 import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
 import epam.xstack.model.Trainee;

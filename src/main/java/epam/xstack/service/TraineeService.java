@@ -1,7 +1,7 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
-import epam.xstack.dto.trainee.TraineeUpdateTrainerListRequestDTO;
+import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
 import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
 import epam.xstack.exception.ForbiddenException;

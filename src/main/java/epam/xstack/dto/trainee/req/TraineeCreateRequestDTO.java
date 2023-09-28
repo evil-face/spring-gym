@@ -1,19 +1,17 @@
-package epam.xstack.dto.trainee;
+package epam.xstack.dto.trainee.req;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import epam.xstack.model.Trainer;
-
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Past;
 import java.time.LocalDate;
-import java.util.Set;
 
-public class TraineeGetResponseDTO {
+public class TraineeCreateRequestDTO {
+    @NotBlank(message = "First name cannot be empty")
     private String firstName;
+    @NotBlank(message = "Last name cannot be empty")
     private String lastName;
+    @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
     private String address;
-    private Boolean isActive;
-    @JsonIgnoreProperties({"id", "password", "trainingList", "trainees", "isActive"})
-    private Set<Trainer> trainers;
 
     public String getFirstName() {
         return firstName;
@@ -45,21 +43,5 @@ public class TraineeGetResponseDTO {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean active) {
-        isActive = active;
-    }
-
-    public Set<Trainer> getTrainers() {
-        return trainers;
-    }
-
-    public void setTrainers(Set<Trainer> trainers) {
-        this.trainers = trainers;
     }
 }

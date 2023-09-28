@@ -1,4 +1,4 @@
-package epam.xstack.dto.trainee;
+package epam.xstack.dto.trainee.resp;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import epam.xstack.model.Trainer;
