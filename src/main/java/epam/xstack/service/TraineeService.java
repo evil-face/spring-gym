@@ -1,19 +1,21 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
+import epam.xstack.dto.trainee.TraineeUpdateTrainerListRequestDTO;
+import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
+import epam.xstack.exception.EntityNotFoundException;
+import epam.xstack.exception.ForbiddenException;
+import epam.xstack.exception.NoSuchTrainerExistException;
+import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
-import epam.xstack.model.User;
-import epam.xstack.validator.GymValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
-import javax.validation.ValidationException;
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,158 +27,127 @@ public final class TraineeService {
     private final UserService userService;
     private final TrainerService trainerService;
     private final AuthenticationService authService;
-    private final GymValidator<Trainee> validator;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeService.class);
 
     @Autowired
     public TraineeService(TraineeDAO traineeDAO, UserService userService,
-                          AuthenticationService authService, GymValidator<Trainee> validator,
-                          TrainerService trainerService) {
+                          AuthenticationService authService, TrainerService trainerService) {
         this.traineeDAO = traineeDAO;
         this.userService = userService;
         this.authService = authService;
-        this.validator = validator;
         this.trainerService = trainerService;
     }
 
-    public void createTrainee(String firstName, String lastName,
-                              boolean isActive, LocalDate dateOfBirth, String address) {
-        String username = userService.generateUsername(firstName, lastName);
+    public Trainee createTrainee(String txID, Trainee newTrainee) {
+        String username = userService.generateUsername(newTrainee.getFirstName(), newTrainee.getLastName());
         String password = userService.generatePassword();
 
-        Trainee trainee = new Trainee(firstName, lastName,
-                username, password, isActive,
-                dateOfBirth, address);
+        newTrainee.setUsername(username);
+        newTrainee.setPassword(password);
+        newTrainee.setIsActive(true);
 
-        Set<String> violations = validator.validate(trainee);
-        if (!violations.isEmpty()) {
-            LOGGER.info("Could not save new trainee because of violations: {}", violations);
-            throw new ValidationException();
-        }
+        checkIfNotRegisteredYet(txID, newTrainee);
 
-        traineeDAO.save(trainee);
-        LOGGER.info("Saved new trainee with id {} to the DB", trainee.getId());
+        traineeDAO.save(txID, newTrainee);
+
+        return newTrainee;
     }
 
-    public List<Trainee> findAll(String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            return traineeDAO.findAll();
-        } else {
-            LOGGER.info("Failed attempt to show all trainees with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+//    public List<Trainee> findAll(String username, String password) throws AuthenticationException {
+//        if (authService.authenticate("stub", username, password)) {
+//            return traineeDAO.findAll();
+//        } else {
+//            LOGGER.info("Failed attempt to show all trainees with credentials {}:{}", username, password);
+//            return new ArrayList<>();
+//        }
+//    }
+
+    public Optional<Trainee> findById(String txID, long id, String username, String password) {
+        if (authService.authenticate(txID, username, password)) {
+            return traineeDAO.findById(txID, id);
         }
+
+        return Optional.empty();
     }
 
-    public Optional<Trainee> findById(long id, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            return traineeDAO.findById(id);
-        } else {
-            LOGGER.info("Failed attempt to find trainee by id with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public Optional<Trainee> update(String txID, Trainee updatedTrainee, String username, String password) {
+        if (authService.authenticate(txID, username, password)) {
+            return traineeDAO.update(txID, updatedTrainee);
         }
+
+        return Optional.empty();
     }
 
-    public Optional<Trainee> findByUsername(String query, String username, String password)
-            throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            Optional<User> user = userService.findByUsername(query);
-
-            return user.isPresent() && user.get() instanceof Trainee trainee
-                    ? Optional.of(trainee) : Optional.empty();
-        } else {
-            LOGGER.info("Failed attempt to find trainee by username with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public void delete(String txID, Trainee traineeToDelete) {
+        if (authService.authenticate(txID, traineeToDelete.getUsername(), traineeToDelete.getPassword())) {
+            traineeDAO.delete(txID, traineeToDelete);
         }
     }
 
-    public void update(Trainee trainee, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            Set<String> violations = validator.validate(trainee);
-            if (!violations.isEmpty()) {
-                LOGGER.info("Could not update trainee because of violations: {}", violations);
-                throw new ValidationException();
-            }
-
-            traineeDAO.update(trainee);
-            LOGGER.info("Updated trainee with id {} in the DB", trainee.getId());
-        } else {
-            LOGGER.info("Failed attempt update trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public void changeActivationStatus(String txID, long id, Boolean newStatus, String username, String password) {
+        if (authService.authenticate(txID, username, password)) {
+            traineeDAO.changeActivationStatus(txID, id, newStatus, username);
         }
     }
 
-    public void delete(Trainee trainee, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            traineeDAO.delete(trainee);
-            LOGGER.info("Deleted trainee with id {} from the DB", trainee.getId());
-        } else {
-            LOGGER.info("Failed attempt to delete trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+//    public List<Training> getTrainingsByTraineeUsername(String traineeUsername, String username, String password)
+//            throws AuthenticationException {
+//        if (authService.authenticate("stub", username, password)) {
+//            return traineeDAO.getTrainingsByTraineeUsername(traineeUsername);
+//        } else {
+//            LOGGER.info("Failed attempt to get trainings for trainee {} with credentials {}:{}",
+//                    traineeUsername, username, password);
+//            throw new AuthenticationException(AUTHENTICATION_FAILED);
+//        }
+//    }
+
+    public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
+                                                    TrainingGetListForTraineeRequestDTO requestDTO) {
+        if (authService.authenticate(txID, username, password)) {
+            return traineeDAO.getTrainingsWithFiltering(txID, id, requestDTO);
         }
+
+        return new ArrayList<>();
     }
 
-    public void deleteByUsername(String usernameToDelete, String username, String password)
-            throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            traineeDAO.delete(usernameToDelete);
-        } else {
-            LOGGER.info("Failed attempt to delete trainee with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public List<Trainer> getPotentialTrainersForTrainee(String txID, long id, String username, String password) {
+        List<Trainer> allTrainers = trainerService.findAll(txID);
+        Optional<Trainee> traineeOpt = traineeDAO.findByUsername(txID, username);
+
+        if (traineeOpt.isEmpty()) {
+            throw new EntityNotFoundException(txID);
+        } else if (traineeOpt.get().getId() != id) {
+            throw new ForbiddenException(txID);
         }
+
+        Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
+        allTrainers.removeAll(assignedTrainers);
+
+        return allTrainers.stream().filter(Trainer::getIsActive).toList();
     }
 
-    public void updatePassword(long id, String newPassword, String username, String oldPassword)
-            throws AuthenticationException {
-        if (authService.authenticate(username, oldPassword)) {
-            traineeDAO.updatePassword(id, newPassword);
-            LOGGER.info("Updated password of trainee with id {} in the DB", id);
-        } else {
-            LOGGER.info("Failed attempt to update trainee password with credentials {}:{}", username, oldPassword);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
+    public List<Trainer> updateTrainerList(String txID, long id, TraineeUpdateTrainerListRequestDTO requestDTO) {
+        List<Trainer> allTrainers = trainerService.findAll(txID);
 
-    public void changeActivationStatus(long id, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            userService.changeActivationStatus(id);
-            LOGGER.info("Changed trainee activation status for id {}", id);
-        } else {
-            LOGGER.info("Failed attempt to change trainee activation status with credentials {}:{}",
-                    username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
-
-    public List<Training> getTrainingsByTraineeUsername(String traineeUsername, String username, String password)
-            throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            return traineeDAO.getTrainingsByTraineeUsername(traineeUsername);
-        } else {
-            LOGGER.info("Failed attempt to get trainings for trainee {} with credentials {}:{}",
-                    traineeUsername, username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
-
-    public List<Training> getTrainingsByTraineeUsernameAndTrainerUsername(
-            String traineeUsername, String trainerUsername,
-            String username, String password) throws AuthenticationException {
-        return getTrainingsByTraineeUsername(traineeUsername, username, password).stream()
-                .filter(training -> training.getTrainer().getUsername().equals(trainerUsername))
+        List<Trainer> updatedList = allTrainers.stream()
+                .filter(trainer -> requestDTO.getTrainers().contains(trainer.getUsername()))
                 .toList();
-    }
 
-    public List<Trainer> getPotentialTrainersForTrainee(String traineeUsername, String username, String password)
-            throws AuthenticationException {
-        List<Trainer> allTrainers = trainerService.findAll(username, password);
-        Optional<Trainee> traineeOpt = traineeDAO.findByUsername(traineeUsername);
-
-        if (traineeOpt.isPresent()) {
-            Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
-            allTrainers.removeAll(assignedTrainers);
+        if (updatedList.isEmpty()) {
+            throw new NoSuchTrainerExistException(txID);
         }
 
-        return allTrainers.stream().filter(Trainer::isActive).toList();
+        return traineeDAO.updateTrainerList(txID, id, requestDTO.getUsername(), updatedList);
     }
 
+    private void checkIfNotRegisteredYet(String txID, Trainee newTrainee) {
+        List<Trainee> candidates = traineeDAO.findAllByUsernamePartialMatch(newTrainee.getUsername());
+
+        for (Trainee trainee : candidates) {
+            if (newTrainee.getAddress().equals(trainee.getAddress()) &&
+            newTrainee.getDateOfBirth().equals(trainee.getDateOfBirth())) {
+                throw new PersonAlreadyRegisteredException(txID);
+            }
+        }
+    }
 }

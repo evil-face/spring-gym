@@ -33,7 +33,7 @@ public class UserDAO {
                 .getResultList();
     }
 
-    public Optional<User> findByUsername(String username) {
+    public Optional<User> findByUsername(String txID, String username) {
         Session session = sessionFactory.getCurrentSession();
         User user = null;
 
@@ -43,21 +43,30 @@ public class UserDAO {
                     .setParameter("username", username)
                     .getSingleResult();
         } catch (NonUniqueResultException | NoResultException e) {
-            LOGGER.warn("Either no users or several users were found for username {}", username);
+            LOGGER.warn("TX ID: {} — Either no users or several users were found for username {}", txID, username);
         }
 
         return Optional.ofNullable(user);
     }
 
     @Transactional
-    public void changeActivationStatus(long id) {
+    public boolean updatePassword(String txID, String username, String newPassword) {
         Session session = sessionFactory.getCurrentSession();
-        User user = session.get(User.class, id);
+        User user = null;
 
-        if (user == null) {
-            LOGGER.warn("No records found for id {}", id);
-        } else {
-            user.setActive(!user.isActive());
+        try {
+            user = session.createQuery(
+                            "SELECT u FROM User u WHERE username = :username", User.class)
+                    .setParameter("username", username)
+                    .getSingleResult();
+            user.setPassword(newPassword);
+            LOGGER.info("TX ID: {} — Successfully updated password of trainee with username {}", txID, username);
+
+            return true;
+        } catch (NonUniqueResultException | NoResultException e) {
+            LOGGER.warn("TX ID: {} — Either no trainees or several trainees were found for username {}", txID, username);
         }
+
+        return false;
     }
 }

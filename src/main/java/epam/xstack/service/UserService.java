@@ -43,12 +43,12 @@ public final class UserService {
         return RandomStringUtils.randomAlphanumeric(PASSWORD_LENGTH);
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userDAO.findByUsername(username);
+    public boolean updatePassword(String txID, String username, String newPassword) {
+        return userDAO.updatePassword(txID, username, newPassword);
     }
 
-    public void changeActivationStatus(long id) {
-        userDAO.changeActivationStatus(id);
+    public Optional<User> findByUsername(String txID, String username) {
+        return userDAO.findByUsername(txID, username);
     }
 
     private static String clearString(String s) {
