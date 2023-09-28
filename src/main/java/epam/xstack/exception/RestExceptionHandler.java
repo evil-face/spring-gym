@@ -15,11 +15,10 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(PersonAlreadyRegisteredException.class)
     protected ResponseEntity<String> handlePersonAlreadyRegistered(RuntimeException e) {
-        String errorBody = "This person is already registered as a trainee";
+        String errorBody = "This person is already registered as a trainee or a trainer";
         LOGGER.warn("TX ID: {} — {} — {}", e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
-        return ResponseEntity.unprocessableEntity()
-                .body(errorBody);
+        return ResponseEntity.unprocessableEntity().body(errorBody);
     }
 
     @ExceptionHandler(NoSuchTrainingTypeException.class)
@@ -27,8 +26,7 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         String errorBody = "No such training type exists";
         LOGGER.warn("TX ID: {} — {} — {}", e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
-        return ResponseEntity.unprocessableEntity()
-                .body(errorBody);
+        return ResponseEntity.unprocessableEntity().body(errorBody);
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -57,7 +55,6 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         String errorBody = "No such trainer exists";
         LOGGER.warn("TX ID: {} — {} — {}", e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
-        return ResponseEntity.unprocessableEntity()
-                .body(errorBody);
+        return ResponseEntity.unprocessableEntity().body(errorBody);
     }
 }
