@@ -1,130 +1,99 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TrainerDAO;
+import epam.xstack.exception.NoSuchTrainingTypeException;
+import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
-import epam.xstack.model.User;
-import epam.xstack.validator.GymValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.naming.AuthenticationException;
-import javax.validation.ValidationException;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public final class TrainerService {
     public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TrainerDAO trainerDAO;
     private final UserService userService;
+    private final TrainingService trainingService;
     private final AuthenticationService authService;
-    private final GymValidator<Trainer> validator;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
     public TrainerService(TrainerDAO trainerDAO, UserService userService,
-                          AuthenticationService authService, GymValidator<Trainer> validator) {
+                          AuthenticationService authService, TrainingService trainingService) {
         this.trainerDAO = trainerDAO;
         this.userService = userService;
         this.authService = authService;
-        this.validator = validator;
+        this.trainingService = trainingService;
     }
 
-    public void createTrainer(String firstName, String lastName,
-                                 boolean isActive, TrainingType specialization) {
-        String username = userService.generateUsername(firstName, lastName);
+    public Trainer createTrainer(String txID, Trainer newTrainer) {
+        String username = userService.generateUsername(newTrainer.getFirstName(), newTrainer.getLastName());
         String password = userService.generatePassword();
 
-        Trainer trainer = new Trainer(firstName, lastName,
-                username, password, isActive, specialization);
+        newTrainer.setUsername(username);
+        newTrainer.setPassword(password);
+        newTrainer.setIsActive(true);
 
-        Set<String> violations = validator.validate(trainer);
-        if (!violations.isEmpty()) {
-            LOGGER.info("Could not save new trainer because of violations: {}", violations);
-            throw new ValidationException();
-        }
+        checkIfSpecializationExists(txID, newTrainer);
+        checkIfNotRegisteredYet(txID, newTrainer);
 
-        trainerDAO.save(trainer);
-        LOGGER.info("Saved new trainer with id {} to the DB", trainer.getId());
+        trainerDAO.save(txID, newTrainer);
+
+        return newTrainer;
     }
 
-    public List<Trainer> findAll(String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
+    public List<Trainer> findAll(String txID) {
             return trainerDAO.findAll();
-        } else {
-            LOGGER.info("Failed attempt to find all trainers with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
     }
 
-    public Optional<Trainer> findById(long id, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            return trainerDAO.findById(id);
-        } else {
-            LOGGER.info("Failed attempt to find trainer by id with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public Optional<Trainer> findById(String txID, long id, String username, String password) {
+        if (authService.authenticate(txID, id, username, password)) {
+            return trainerDAO.findById(txID, id);
         }
+
+        return Optional.empty();
     }
 
-    public Optional<Trainer> findByUsername(String query, String username, String password)
-            throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            Optional<User> user = userService.findByUsername(query);
+//    public Optional<Trainer> findByUsername(String query, String username, String password)
+//            throws AuthenticationException {
+//        if (authService.authenticate("stub", username, password)) {
+//            Optional<User> user = userService.findByUsername("stub", query);
+//
+//            return user.isPresent() && user.get() instanceof Trainer trainer
+//                    ? Optional.of(trainer) : Optional.empty();
+//        } else {
+//            LOGGER.info("Failed attempt to find trainer by username with credentials {}:{}", username, password);
+//            throw new AuthenticationException(AUTHENTICATION_FAILED);
+//        }
+//    }
 
-            return user.isPresent() && user.get() instanceof Trainer trainer
-                    ? Optional.of(trainer) : Optional.empty();
-        } else {
-            LOGGER.info("Failed attempt to find trainer by username with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public Optional<Trainer> update(String txID, Trainer updatedTrainer, String username, String password) {
+        if (authService.authenticate(txID, updatedTrainer.getId(), username, password)) {
+            TrainingType confirmedTrainingType = checkIfSpecializationExists(txID, updatedTrainer);
+            updatedTrainer.setSpecialization(confirmedTrainingType);
+
+            return trainerDAO.update(txID, updatedTrainer);
         }
+
+        return Optional.empty();
     }
 
-    public void update(Trainer trainer, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            Set<String> violations = validator.validate(trainer);
-            if (!violations.isEmpty()) {
-                LOGGER.info("Could not update trainer because of violations: {}", violations);
-                throw new ValidationException();
-            }
-
-            trainerDAO.update(trainer);
-            LOGGER.info("Updated trainer with id {} in the DB", trainer.getId());
-        } else {
-            LOGGER.info("Failed attempt update trainer with credentials {}:{}", username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
-
-    public void updatePassword(long id, String newPassword, String username, String oldPassword)
-            throws AuthenticationException {
-        if (authService.authenticate(username, oldPassword)) {
-            trainerDAO.updatePassword(id, newPassword);
-            LOGGER.info("Updated password of trainer with id {} in the DB", id);
-        } else {
-            LOGGER.info("Failed attempt to update trainer password with credentials {}:{}", username, oldPassword);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
-
-    public void changeActivationStatus(long id, String username, String password) throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
-            userService.changeActivationStatus(id);
-            LOGGER.info("Changed trainer activation status for id {}", id);
-        } else {
-            LOGGER.info("Failed attempt to change trainer activation status with credentials {}:{}",
-                    username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
+    public void changeActivationStatus(String txID, long id, Boolean newStatus, String username, String password) {
+        if (authService.authenticate(txID, id, username, password)) {
+            trainerDAO.changeActivationStatus(txID, id, newStatus, username);
         }
     }
 
     public List<Training> getTrainingsByTrainerUsername(String trainerUsername, String username, String password)
             throws AuthenticationException {
-        if (authService.authenticate(username, password)) {
+        if (authService.authenticate("stub", 0, username, password)) {
             return trainerDAO.getTrainingsByTrainerUsername(trainerUsername);
         } else {
             LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
@@ -139,5 +108,26 @@ public final class TrainerService {
         return getTrainingsByTrainerUsername(trainerUsername, username, password).stream()
                 .filter(training -> training.getTrainee().getUsername().equals(traineeUsername))
                 .toList();
+    }
+
+    private void checkIfNotRegisteredYet(String txID, Trainer newTrainer) {
+        List<Trainer> candidates = trainerDAO.findAllByUsernamePartialMatch(newTrainer.getUsername());
+
+        for (Trainer trainer : candidates) {
+            if (newTrainer.getSpecialization().getId() == trainer.getSpecialization().getId()) {
+                throw new PersonAlreadyRegisteredException(txID);
+            }
+        }
+    }
+
+    private TrainingType checkIfSpecializationExists(String txID, Trainer trainer) {
+        Optional<TrainingType> trainingTypeOpt = trainingService.specializationExistsById(
+                trainer.getSpecialization().getId());
+
+        if (trainingTypeOpt.isEmpty()) {
+            throw new NoSuchTrainingTypeException(txID);
+        } else {
+            return trainingTypeOpt.get();
+        }
     }
 }
