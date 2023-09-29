@@ -65,6 +65,10 @@ public final class TraineeService {
         return Optional.empty();
     }
 
+    public Optional<Trainee> findByUsername(String txID, String username) {
+        return traineeDAO.findByUsername(txID, username);
+    }
+
     public Optional<Trainee> update(String txID, Trainee updatedTrainee, String username, String password) {
         if (authService.authenticate(txID, updatedTrainee.getId(), username, password)) {
             return traineeDAO.update(txID, updatedTrainee);

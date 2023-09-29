@@ -61,18 +61,9 @@ public final class TrainerService {
         return Optional.empty();
     }
 
-//    public Optional<Trainer> findByUsername(String query, String username, String password)
-//            throws AuthenticationException {
-//        if (authService.authenticate("stub", username, password)) {
-//            Optional<User> user = userService.findByUsername("stub", query);
-//
-//            return user.isPresent() && user.get() instanceof Trainer trainer
-//                    ? Optional.of(trainer) : Optional.empty();
-//        } else {
-//            LOGGER.info("Failed attempt to find trainer by username with credentials {}:{}", username, password);
-//            throw new AuthenticationException(AUTHENTICATION_FAILED);
-//        }
-//    }
+    public Optional<Trainer> findByUsername(String txID, String username) {
+        return trainerDAO.findByUsername(txID, username);
+    }
 
     public Optional<Trainer> update(String txID, Trainer updatedTrainer, String username, String password) {
         if (authService.authenticate(txID, updatedTrainer.getId(), username, password)) {
