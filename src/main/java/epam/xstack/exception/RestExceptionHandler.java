@@ -57,4 +57,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }
+
+    @ExceptionHandler(NoSuchTraineeExistException.class)
+    protected ResponseEntity<String> handleBadTraineeInput(RuntimeException e) {
+        String errorBody = "No such trainee exists";
+        LOGGER.warn("TX ID: {} — {} — {}", e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+
+        return ResponseEntity.unprocessableEntity().body(errorBody);
+    }
 }
