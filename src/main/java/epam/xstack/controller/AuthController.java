@@ -29,6 +29,8 @@ public final class AuthController {
     private final AuthenticationService authService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
+    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
+    private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
     public AuthController(AuthenticationService authService, ModelMapper modelMapper) {
@@ -45,7 +47,7 @@ public final class AuthController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -53,7 +55,7 @@ public final class AuthController {
         User user = modelMapper.map(authDTO, User.class);
 
         if (authService.authenticate(txID, id, user.getUsername(), user.getPassword())) {
-            LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+            LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
             return ResponseEntity.ok().build();
         }
@@ -70,7 +72,7 @@ public final class AuthController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -78,10 +80,10 @@ public final class AuthController {
         boolean success = authService.updatePassword(txID, id, requestDTO);
 
         if (success) {
-            LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+            LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
             return ResponseEntity.ok().build();
         } else {
-            LOGGER.info("TX ID: {} — " + HttpStatus.NOT_FOUND, txID);
+            LOGGER.info(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
             return ResponseEntity.notFound().build();
         }
 

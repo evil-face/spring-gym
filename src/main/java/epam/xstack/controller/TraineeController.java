@@ -17,6 +17,8 @@ import epam.xstack.service.TraineeService;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,6 +48,8 @@ public final class TraineeController {
     private final TraineeService traineeService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeController.class);
+    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
+    private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
     public TraineeController(TraineeService traineeService, ModelMapper modelMapper) {
@@ -62,7 +66,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -75,7 +79,7 @@ public final class TraineeController {
                 .path("/api/v1/trainees/{traineeId}")
                 .build(createdTrainee.getId());
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.created(location).body(response);
     }
 
@@ -88,7 +92,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -97,10 +101,10 @@ public final class TraineeController {
         Optional<TraineeGetResponseDTO> trainee = traineeOpt.map(
                 value -> modelMapper.map(value, TraineeGetResponseDTO.class));
 
-        String logMessage = trainee.isPresent()
-                ? "TX ID: {} — " + HttpStatus.OK
-                : "TX ID: {} — " + HttpStatus.NOT_FOUND;
-        LOGGER.info(logMessage, txID);
+        FormattingTuple logMessage = trainee.isPresent()
+                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
+                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
+        LOGGER.info(logMessage.getMessage());
 
         return ResponseEntity.of(trainee);
     }
@@ -114,7 +118,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -128,10 +132,10 @@ public final class TraineeController {
         Optional<TraineeUpdateResponseDTO> updatedTraineeResponseDTO = updatedTraineeOpt.map(
                 value -> modelMapper.map(value, TraineeUpdateResponseDTO.class));
 
-        String logMessage = updatedTraineeResponseDTO.isPresent()
-                ? "TX ID: {} — " + HttpStatus.OK
-                : "TX ID: {} — " + HttpStatus.NOT_FOUND;
-        LOGGER.info(logMessage, txID);
+        FormattingTuple logMessage = updatedTraineeResponseDTO.isPresent()
+                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
+                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
+        LOGGER.info(logMessage.getMessage());
 
         return ResponseEntity.of(updatedTraineeResponseDTO);
     }
@@ -145,7 +149,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -155,7 +159,7 @@ public final class TraineeController {
 
         traineeService.delete(txID, traineeToDelete);
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.NO_CONTENT, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.NO_CONTENT);
 
         return ResponseEntity.noContent().build();
     }
@@ -169,7 +173,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -177,7 +181,7 @@ public final class TraineeController {
         traineeService.changeActivationStatus(txID, id, requestDTO.getIsActive(),
                 requestDTO.getUsername(), requestDTO.getPassword());
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
         return ResponseEntity.ok().build();
     }
@@ -191,7 +195,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -203,7 +207,7 @@ public final class TraineeController {
                 .map(e -> modelMapper.map(e, UnassignedTrainersResponseDTO.class))
                 .toList();
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
         return ResponseEntity.ok().body(response);
     }
@@ -222,7 +226,7 @@ public final class TraineeController {
                 .map(e -> modelMapper.map(e, TraineeGetTrainingListResponseDTO.class))
                 .toList();
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
         return ResponseEntity.ok().body(response);
     }
@@ -236,7 +240,7 @@ public final class TraineeController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -247,7 +251,7 @@ public final class TraineeController {
                 .map(trainer -> modelMapper.map(trainer, UnassignedTrainersResponseDTO.class))
                 .toList();
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
         return ResponseEntity.ok(responseDTO);
     }

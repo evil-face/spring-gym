@@ -29,6 +29,8 @@ import java.util.Map;
 public final class TrainingController {
     private final TrainingService trainingService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingController.class);
+    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
+    private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
     public TrainingController(TrainingService trainingService) {
@@ -41,7 +43,7 @@ public final class TrainingController {
 
         List<TrainingType> response = trainingService.findAllTrainingTypes(txID);
 
-        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.ok().body(response);
     }
 
@@ -54,7 +56,7 @@ public final class TrainingController {
 
         if (bindingResult.hasErrors()) {
             Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn("TX ID: {} — " + HttpStatus.UNPROCESSABLE_ENTITY + " — " + errors, txID);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
 
             return ResponseEntity.unprocessableEntity().body(errors);
         }
@@ -67,7 +69,7 @@ public final class TrainingController {
 
 
         // Task required 200 OK
-        LOGGER.info("TX ID: {} — " + HttpStatus.CREATED, txID);
+        LOGGER.info(LOG_MESSAGE, txID, HttpStatus.CREATED);
         return ResponseEntity.created(location).build();
     }
 

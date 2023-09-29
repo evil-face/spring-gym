@@ -14,7 +14,7 @@ import java.util.Optional;
 @Service
 public final class AuthenticationService {
     private final UserService userService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationService.class);
 
     @Autowired
     public AuthenticationService(UserService userService) {
@@ -42,6 +42,7 @@ public final class AuthenticationService {
             LOGGER.warn("TX ID: {} — Bad login attempt with username {}", txID, username);
             throw new UnauthorizedException(txID);
         }
+
     }
 
     public boolean updatePassword(String txID, long id, PasswordChangeRequestDTO requestDTO) {

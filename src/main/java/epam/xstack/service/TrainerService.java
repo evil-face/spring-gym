@@ -7,8 +7,6 @@ import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +19,6 @@ public final class TrainerService {
     private final TrainerDAO trainerDAO;
     private final UserService userService;
     private final AuthenticationService authService;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
     public TrainerService(TrainerDAO trainerDAO, UserService userService,
@@ -47,7 +44,7 @@ public final class TrainerService {
         return newTrainer;
     }
 
-    public List<Trainer> findAll(String txID) {
+    public List<Trainer> findAll() {
         return trainerDAO.findAll();
     }
 

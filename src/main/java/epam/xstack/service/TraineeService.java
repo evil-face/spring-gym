@@ -118,7 +118,7 @@ public final class TraineeService {
                 throw new EntityNotFoundException(txID);
             }
 
-            List<Trainer> allTrainers = trainerService.findAll(txID);
+            List<Trainer> allTrainers = trainerService.findAll();
             Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
             allTrainers.removeAll(assignedTrainers);
 
@@ -130,7 +130,7 @@ public final class TraineeService {
 
     // no auth in task requirements!
     public List<Trainer> updateTrainerList(String txID, long id, TraineeUpdateTrainerListRequestDTO requestDTO) {
-        List<Trainer> allTrainers = trainerService.findAll(txID);
+        List<Trainer> allTrainers = trainerService.findAll();
 
         List<Trainer> updatedList = allTrainers.stream()
                 .filter(trainer -> requestDTO.getTrainers().contains(trainer.getUsername()))
