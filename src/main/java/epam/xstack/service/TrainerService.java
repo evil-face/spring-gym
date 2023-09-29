@@ -48,7 +48,7 @@ public final class TrainerService {
     }
 
     public List<Trainer> findAll(String txID) {
-            return trainerDAO.findAll();
+        return trainerDAO.findAll();
     }
 
     public Optional<Trainer> findById(String txID, long id, String username, String password) {

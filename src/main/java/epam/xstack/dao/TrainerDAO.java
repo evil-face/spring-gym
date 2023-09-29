@@ -82,7 +82,8 @@ public class TrainerDAO {
                     .getSingleResult();
             Hibernate.initialize(trainer.getTrainees());
         } catch (NonUniqueResultException | NoResultException e) {
-            LOGGER.warn("TX ID: {} — Either no trainers or several trainers were found for username {}", txID, username);
+            LOGGER.warn("TX ID: {} — Either no trainers or several trainers were found for username {}",
+                    txID, username);
         }
 
         if (trainer == null) {

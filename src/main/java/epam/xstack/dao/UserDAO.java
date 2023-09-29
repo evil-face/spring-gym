@@ -64,7 +64,8 @@ public class UserDAO {
 
             return true;
         } catch (NonUniqueResultException | NoResultException e) {
-            LOGGER.warn("TX ID: {} — Either no trainees or several trainees were found for username {}", txID, username);
+            LOGGER.warn("TX ID: {} — Either no trainees or several trainees were found for username {}",
+                    txID, username);
         }
 
         return false;

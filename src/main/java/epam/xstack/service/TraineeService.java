@@ -147,8 +147,8 @@ public final class TraineeService {
         List<Trainee> candidates = traineeDAO.findAllByUsernamePartialMatch(newTrainee.getUsername());
 
         for (Trainee trainee : candidates) {
-            if (newTrainee.getAddress().equals(trainee.getAddress()) &&
-            newTrainee.getDateOfBirth().equals(trainee.getDateOfBirth())) {
+            if (newTrainee.getAddress().equals(trainee.getAddress())
+                    && newTrainee.getDateOfBirth().equals(trainee.getDateOfBirth())) {
                 throw new PersonAlreadyRegisteredException(txID);
             }
         }

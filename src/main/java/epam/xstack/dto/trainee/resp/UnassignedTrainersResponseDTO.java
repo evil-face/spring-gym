@@ -2,7 +2,7 @@ package epam.xstack.dto.trainee.resp;
 
 import epam.xstack.model.TrainingType;
 
-public class UnassignedTrainersResponseDTO {
+public final class UnassignedTrainersResponseDTO {
     private String username;
     private String firstName;
     private String lastName;

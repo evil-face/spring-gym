@@ -6,7 +6,7 @@ import epam.xstack.model.Trainer;
 import java.time.LocalDate;
 import java.util.Set;
 
-public class TraineeUpdateResponseDTO {
+public final class TraineeUpdateResponseDTO {
     private String username;
     private String firstName;
     private String lastName;

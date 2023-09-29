@@ -2,19 +2,18 @@ package epam.xstack.dto.trainer.resp;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import epam.xstack.model.Trainee;
-import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
 
 import java.time.LocalDate;
 
-public class TrainerGetTrainingListResponseDTO {
+public final class TrainerGetTrainingListResponseDTO {
 
     private String trainingName;
     private LocalDate trainingDate;
     private TrainingType trainingType;
     private int trainingDuration;
     @JsonIgnoreProperties({"id", "username", "password", "trainingList", "dateOfBirth", "address",
-            "trainers", "isActive"})
+        "trainers", "isActive"})
     private Trainee trainee;
 
     public String getTrainingName() {

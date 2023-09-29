@@ -6,7 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 
-public class TrainingCreateRequestDTO {
+public final class TrainingCreateRequestDTO {
     @NotBlank(message = "Trainee username cannot be empty")
     private String traineeUsername;
     @NotBlank(message = "Trainer username cannot be empty")

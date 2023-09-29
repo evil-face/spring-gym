@@ -5,7 +5,7 @@ import javax.validation.constraints.NotEmpty;
 
 import java.util.List;
 
-public class TraineeUpdateTrainerListRequestDTO {
+public final class TraineeUpdateTrainerListRequestDTO {
     @NotBlank(message = "Username cannot be empty")
     private String username;
     @NotEmpty

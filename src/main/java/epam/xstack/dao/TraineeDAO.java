@@ -80,7 +80,8 @@ public class TraineeDAO {
                     .getSingleResult();
             Hibernate.initialize(trainee.getTrainers());
         } catch (NonUniqueResultException | NoResultException e) {
-            LOGGER.warn("TX ID: {} — Either no trainees or several trainees were found for username {}", txID, username);
+            LOGGER.warn("TX ID: {} — Either no trainees or several trainees were found for username {}",
+                    txID, username);
         }
 
         if (trainee == null) {
@@ -205,9 +206,8 @@ public class TraineeDAO {
 
         trainee.setTrainers(new HashSet<>(updatedList));
 
-        LOGGER.info("TX ID: {} — Successfully updated trainee's list of trainers " +
-                            "for username '{}' with '{}' trainers",
-                    txID, username, updatedList.size());
+        LOGGER.info("TX ID: {} — Successfully updated trainee's list of trainers "
+                        + "for username '{}' with '{}' trainers", txID, username, updatedList.size());
 
         return updatedList;
     }

@@ -10,11 +10,12 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.UUID;
 
 @Component
-public class RequestLoggingInterceptor implements HandlerInterceptor {
+public final class RequestLoggingInterceptor implements HandlerInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
+    private static final int TX_ID_LENGTH = 8;
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String txID = UUID.randomUUID().toString().substring(0, 8);
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        String txID = UUID.randomUUID().toString().substring(0, TX_ID_LENGTH);
         request.setAttribute("txID", txID);
 
         String logMessage = buildRequestLogMessage(txID, request);

@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
@@ -26,7 +25,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(value = "/api/v1/auth", consumes = {"application/JSON"}, produces = {"application/JSON"})
-public class AuthController {
+public final class AuthController {
     private final AuthenticationService authService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
@@ -66,7 +65,7 @@ public class AuthController {
     public ResponseEntity<?> handleChangePassword(@PathVariable("id") long id,
                                                   @RequestBody @Valid PasswordChangeRequestDTO requestDTO,
                                                   BindingResult bindingResult,
-                                                  HttpServletRequest httpServletRequest) throws AuthenticationException {
+                                                  HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {

@@ -5,7 +5,7 @@ import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
 import java.time.LocalDate;
 
-public class TraineeGetTrainingListResponseDTO {
+public final class TraineeGetTrainingListResponseDTO {
 
     private String trainingName;
     private LocalDate trainingDate;

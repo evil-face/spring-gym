@@ -6,7 +6,7 @@ import epam.xstack.model.TrainingType;
 
 import java.util.Set;
 
-public class TrainerGetResponseDTO {
+public final class TrainerGetResponseDTO {
     private String firstName;
     private String lastName;
     private TrainingType specialization;

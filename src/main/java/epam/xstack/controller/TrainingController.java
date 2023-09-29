@@ -26,7 +26,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(value = "api/v1/trainings")
-public class TrainingController {
+public final class TrainingController {
     private final TrainingService trainingService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingController.class);
 

@@ -5,7 +5,7 @@ import epam.xstack.model.Trainer;
 
 import java.util.List;
 
-public class TraineeUpdateTrainerListResponseDTO {
+public final class TraineeUpdateTrainerListResponseDTO {
     @JsonIgnoreProperties({"id", "password", "trainingList", "trainees", "isActive"})
     private List<Trainer> trainers;
 

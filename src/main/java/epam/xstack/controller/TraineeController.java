@@ -42,7 +42,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/api/v1/trainees", consumes = {"application/JSON"}, produces = {"application/JSON"})
-public class TraineeController {
+public final class TraineeController {
     private final TraineeService traineeService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeController.class);
@@ -97,9 +97,9 @@ public class TraineeController {
         Optional<TraineeGetResponseDTO> trainee = traineeOpt.map(
                 value -> modelMapper.map(value, TraineeGetResponseDTO.class));
 
-        String logMessage = trainee.isPresent() ?
-                "TX ID: {} — " + HttpStatus.OK :
-                "TX ID: {} — " + HttpStatus.NOT_FOUND;
+        String logMessage = trainee.isPresent()
+                ? "TX ID: {} — " + HttpStatus.OK
+                : "TX ID: {} — " + HttpStatus.NOT_FOUND;
         LOGGER.info(logMessage, txID);
 
         return ResponseEntity.of(trainee);
@@ -128,9 +128,9 @@ public class TraineeController {
         Optional<TraineeUpdateResponseDTO> updatedTraineeResponseDTO = updatedTraineeOpt.map(
                 value -> modelMapper.map(value, TraineeUpdateResponseDTO.class));
 
-        String logMessage = updatedTraineeResponseDTO.isPresent() ?
-                "TX ID: {} — " + HttpStatus.OK :
-                "TX ID: {} — " + HttpStatus.NOT_FOUND;
+        String logMessage = updatedTraineeResponseDTO.isPresent()
+                ? "TX ID: {} — " + HttpStatus.OK
+                : "TX ID: {} — " + HttpStatus.NOT_FOUND;
         LOGGER.info(logMessage, txID);
 
         return ResponseEntity.of(updatedTraineeResponseDTO);
@@ -210,9 +210,9 @@ public class TraineeController {
 
     @GetMapping("/{id}/trainings")
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
-                                                             @RequestBody @Valid TraineeGetTrainingListRequestDTO requestDTO,
-                                                             BindingResult bindingResult,
-                                                             HttpServletRequest httpServletRequest) {
+                                                     @RequestBody @Valid TraineeGetTrainingListRequestDTO requestDTO,
+                                                     BindingResult bindingResult,
+                                                     HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         List<Training> trainings = traineeService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
