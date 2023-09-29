@@ -2,7 +2,7 @@ package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
 import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
-import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
+import epam.xstack.dto.trainee.req.TraineeGetTrainingListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
 import epam.xstack.exception.NoSuchTrainerExistException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
@@ -98,7 +98,7 @@ public final class TraineeService {
 //    }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
-                                                    TrainingGetListForTraineeRequestDTO requestDTO) {
+                                                    TraineeGetTrainingListRequestDTO requestDTO) {
         if (authService.authenticate(txID, id, username, password)) {
             return traineeDAO.getTrainingsWithFiltering(txID, id, requestDTO);
         }

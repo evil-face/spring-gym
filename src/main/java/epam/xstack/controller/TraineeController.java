@@ -8,8 +8,8 @@ import epam.xstack.dto.trainee.req.TraineeUpdateRequestDTO;
 import epam.xstack.dto.trainee.resp.TraineeUpdateResponseDTO;
 import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
 import epam.xstack.dto.trainee.resp.UnassignedTrainersResponseDTO;
-import epam.xstack.dto.training.TrainingGetListForTraineeRequestDTO;
-import epam.xstack.dto.training.TrainingResponseDTO;
+import epam.xstack.dto.trainee.req.TraineeGetTrainingListRequestDTO;
+import epam.xstack.dto.trainee.req.TraineeGetTrainingListResponseDTO;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
@@ -210,7 +210,7 @@ public class TraineeController {
 
     @GetMapping("/{id}/trainings")
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
-                                                             @RequestBody @Valid TrainingGetListForTraineeRequestDTO requestDTO,
+                                                             @RequestBody @Valid TraineeGetTrainingListRequestDTO requestDTO,
                                                              BindingResult bindingResult,
                                                              HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
@@ -218,8 +218,8 @@ public class TraineeController {
         List<Training> trainings = traineeService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
 
-        List<TrainingResponseDTO> response = trainings.stream()
-                .map(e -> modelMapper.map(e, TrainingResponseDTO.class))
+        List<TraineeGetTrainingListResponseDTO> response = trainings.stream()
+                .map(e -> modelMapper.map(e, TraineeGetTrainingListResponseDTO.class))
                 .toList();
 
         LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);

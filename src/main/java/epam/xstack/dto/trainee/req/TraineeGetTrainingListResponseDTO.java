@@ -1,11 +1,11 @@
-package epam.xstack.dto.training;
+package epam.xstack.dto.trainee.req;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
 import java.time.LocalDate;
 
-public class TrainingResponseDTO {
+public class TraineeGetTrainingListResponseDTO {
 
     private String trainingName;
     private LocalDate trainingDate;
