@@ -1,6 +1,7 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TrainerDAO;
+import epam.xstack.dto.trainer.req.TrainerGetTrainingListRequestDTO;
 import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
@@ -11,26 +12,23 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public final class TrainerService {
-    public static final String AUTHENTICATION_FAILED = "Authentication failed";
     private final TrainerDAO trainerDAO;
     private final UserService userService;
-    private final TrainingService trainingService;
     private final AuthenticationService authService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
     public TrainerService(TrainerDAO trainerDAO, UserService userService,
-                          AuthenticationService authService, TrainingService trainingService) {
+                          AuthenticationService authService) {
         this.trainerDAO = trainerDAO;
         this.userService = userService;
         this.authService = authService;
-        this.trainingService = trainingService;
     }
 
     public Trainer createTrainer(String txID, Trainer newTrainer) {
@@ -82,23 +80,24 @@ public final class TrainerService {
         }
     }
 
-    public List<Training> getTrainingsByTrainerUsername(String trainerUsername, String username, String password)
-            throws AuthenticationException {
-        if (authService.authenticate("stub", 0, username, password)) {
-            return trainerDAO.getTrainingsByTrainerUsername(trainerUsername);
-        } else {
-            LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
-                    trainerUsername, username, password);
-            throw new AuthenticationException(AUTHENTICATION_FAILED);
-        }
-    }
+//    public List<Training> getTrainingsByTrainerUsername(String trainerUsername, String username, String password)
+//            throws AuthenticationException {
+//        if (authService.authenticate("stub", 0, username, password)) {
+//            return trainerDAO.getTrainingsByTrainerUsername(trainerUsername);
+//        } else {
+//            LOGGER.info("Failed attempt to get trainings for trainer {} with credentials {}:{}",
+//                    trainerUsername, username, password);
+//            throw new AuthenticationException(AUTHENTICATION_FAILED);
+//        }
+//    }
 
-    public List<Training> getTrainingsByTrainerUsernameAndTraineeUsername(
-            String trainerUsername, String traineeUsername,
-            String username, String password) throws AuthenticationException {
-        return getTrainingsByTrainerUsername(trainerUsername, username, password).stream()
-                .filter(training -> training.getTrainee().getUsername().equals(traineeUsername))
-                .toList();
+    public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
+                                                    TrainerGetTrainingListRequestDTO requestDTO) {
+        if (authService.authenticate(txID, id, username, password)) {
+            return trainerDAO.getTrainingsWithFiltering(txID, id, requestDTO);
+        }
+
+        return new ArrayList<>();
     }
 
     private void checkIfNotRegisteredYet(String txID, Trainer newTrainer) {
@@ -112,7 +111,7 @@ public final class TrainerService {
     }
 
     private TrainingType checkIfSpecializationExists(String txID, Trainer trainer) {
-        Optional<TrainingType> trainingTypeOpt = trainingService.specializationExistsById(
+        Optional<TrainingType> trainingTypeOpt = trainerDAO.trainingTypeExistsById(
                 trainer.getSpecialization().getId());
 
         if (trainingTypeOpt.isEmpty()) {

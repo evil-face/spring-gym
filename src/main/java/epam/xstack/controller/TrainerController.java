@@ -3,10 +3,13 @@ package epam.xstack.controller;
 import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.trainer.req.TrainerActivationRequestDTO;
 import epam.xstack.dto.trainer.req.TrainerCreateRequestDTO;
+import epam.xstack.dto.trainer.req.TrainerGetTrainingListRequestDTO;
 import epam.xstack.dto.trainer.req.TrainerUpdateRequestDTO;
 import epam.xstack.dto.trainer.resp.TrainerGetResponseDTO;
+import epam.xstack.dto.trainer.resp.TrainerGetTrainingListResponseDTO;
 import epam.xstack.dto.trainer.resp.TrainerUpdateResponseDTO;
 import epam.xstack.model.Trainer;
+import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainerService;
 import org.modelmapper.ModelMapper;
@@ -30,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -153,6 +157,25 @@ public class TrainerController {
         LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
 
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{id}/trainings")
+    public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
+                                                             @RequestBody @Valid TrainerGetTrainingListRequestDTO requestDTO,
+                                                             BindingResult bindingResult,
+                                                             HttpServletRequest httpServletRequest) {
+        String txID = (String) httpServletRequest.getAttribute("txID");
+
+        List<Training> trainings = trainerService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
+                requestDTO.getPassword(), requestDTO);
+
+        List<TrainerGetTrainingListResponseDTO> response = trainings.stream()
+                .map(e -> modelMapper.map(e, TrainerGetTrainingListResponseDTO.class))
+                .toList();
+
+        LOGGER.info("TX ID: {} — " + HttpStatus.OK, txID);
+
+        return ResponseEntity.ok().body(response);
     }
 
     private Map<String, String> buildErrorMessage(BindingResult bindingResult) {
