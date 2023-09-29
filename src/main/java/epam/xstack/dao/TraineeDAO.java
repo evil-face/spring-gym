@@ -84,7 +84,7 @@ public class TraineeDAO {
         }
 
         if (trainee == null) {
-            LOGGER.warn("TX ID: {} — No records found for username {}", txID, username);
+            LOGGER.warn("TX ID: {} — No trainee records found for username {}", txID, username);
         }
 
         return Optional.ofNullable(trainee);
@@ -161,26 +161,26 @@ public class TraineeDAO {
         return query.getResultList();
     }
 
-    public List<Training> getTrainingsByTraineeUsername(String traineeUsername) {
-        Session session = sessionFactory.getCurrentSession();
-        Trainee trainee = null;
-
-        try {
-            trainee = session.createQuery(
-                            "SELECT t FROM Trainee t WHERE username = :username", Trainee.class)
-                    .setParameter("username", traineeUsername)
-                    .getSingleResult();
-
-            if (trainee != null) {
-                Hibernate.initialize(trainee.getTrainingList());
-                return trainee.getTrainingList();
-            }
-        } catch (NonUniqueResultException | NoResultException e) {
-            LOGGER.warn("Either no trainees or several trainees were found for username {}", traineeUsername);
-        }
-
-        return new ArrayList<>();
-    }
+//    public List<Training> getTrainingsByTraineeUsername(String traineeUsername) {
+//        Session session = sessionFactory.getCurrentSession();
+//        Trainee trainee = null;
+//
+//        try {
+//            trainee = session.createQuery(
+//                            "SELECT t FROM Trainee t WHERE username = :username", Trainee.class)
+//                    .setParameter("username", traineeUsername)
+//                    .getSingleResult();
+//
+//            if (trainee != null) {
+//                Hibernate.initialize(trainee.getTrainingList());
+//                return trainee.getTrainingList();
+//            }
+//        } catch (NonUniqueResultException | NoResultException e) {
+//            LOGGER.warn("Either no trainees or several trainees were found for username {}", traineeUsername);
+//        }
+//
+//        return new ArrayList<>();
+//    }
 
     public List<Trainee> findAllByUsernamePartialMatch(String username) {
         Session session = sessionFactory.getCurrentSession();
