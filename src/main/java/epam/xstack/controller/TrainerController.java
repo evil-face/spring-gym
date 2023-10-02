@@ -172,6 +172,13 @@ public final class TrainerController {
                                                      HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = buildErrorMessage(bindingResult);
+            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
+
+            return ResponseEntity.unprocessableEntity().body(errors);
+        }
+
         List<Training> trainings = trainerService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
 
