@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TraineeResponseDTO {
+public final class TraineeResponseDTO {
     private String username;
     private String firstName;
     private String lastName;

@@ -3,7 +3,7 @@ package epam.xstack.dto.training;
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 
-public class TrainingGetListRequestDTO {
+public final class TrainingGetListRequestDTO {
     @NotBlank(message = "Username cannot be empty")
     private String username;
     @NotBlank(message = "Password cannot be empty")

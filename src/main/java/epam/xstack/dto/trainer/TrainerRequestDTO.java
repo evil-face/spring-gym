@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 
 @GroupSequence({TrainerRequestDTO.class, TrainerCreateGroup.class, TrainerUpdateGroup.class,
     TrainerActivateGroup.class})
-public class TrainerRequestDTO {
+public final class TrainerRequestDTO {
     @NotBlank(message = "First name cannot be empty", groups = {TrainerCreateGroup.class, TrainerUpdateGroup.class})
     private String firstName;
     @NotBlank(message = "Last name cannot be empty", groups = {TrainerCreateGroup.class, TrainerUpdateGroup.class})

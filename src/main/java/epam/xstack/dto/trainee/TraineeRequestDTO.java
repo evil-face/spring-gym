@@ -15,7 +15,7 @@ import java.util.List;
 
 @GroupSequence({TraineeRequestDTO.class, TraineeCreateGroup.class, TraineeUpdateGroup.class,
     TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
-public class TraineeRequestDTO {
+public final class TraineeRequestDTO {
     @NotBlank(message = "Username cannot be empty",
         groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
     private String username;

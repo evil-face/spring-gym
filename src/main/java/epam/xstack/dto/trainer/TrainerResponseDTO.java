@@ -8,7 +8,7 @@ import epam.xstack.model.TrainingType;
 import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TrainerResponseDTO {
+public final class TrainerResponseDTO {
     private String username;
     private String firstName;
     private String lastName;

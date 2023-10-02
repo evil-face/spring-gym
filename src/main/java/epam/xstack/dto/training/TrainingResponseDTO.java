@@ -9,7 +9,7 @@ import epam.xstack.model.TrainingType;
 import java.time.LocalDate;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class TrainingResponseDTO {
+public final class TrainingResponseDTO {
     private String trainingName;
     private LocalDate trainingDate;
     private TrainingType trainingType;

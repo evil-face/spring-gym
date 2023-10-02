@@ -2,7 +2,7 @@ package epam.xstack.dto.auth;
 
 import javax.validation.constraints.NotBlank;
 
-public class AuthDTO {
+public final class AuthDTO {
     @NotBlank(message = "Username cannot be empty")
     private String username;
     @NotBlank(message = "Password cannot be empty")
