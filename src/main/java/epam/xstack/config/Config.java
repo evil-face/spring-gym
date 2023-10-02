@@ -104,7 +104,7 @@ public class Config implements WebMvcConfigurer {
     }
 
     @Bean
-    public Docket api(){
+    public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
                 .select()
                 .apis(RequestHandlerSelectors.basePackage("epam.xstack.controller"))
@@ -112,7 +112,7 @@ public class Config implements WebMvcConfigurer {
                 .build().apiInfo(apiEndPointInfo());
     }
 
-    public ApiInfo apiEndPointInfo(){
+    public ApiInfo apiEndPointInfo() {
         return new ApiInfoBuilder().title("Gym REST API")
                 .description("API for interaction with back-end of Gym application")
                 .contact(new Contact("Denis", "github.com/evil-face", "den.bragin@gmail.com"))

@@ -17,7 +17,8 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(PersonAlreadyRegisteredException.class)
     protected ResponseEntity<String> handlePersonAlreadyRegistered(RuntimeException e) {
         String errorBody = "This person is already registered as a trainee or a trainer";
-        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(),
+                HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }
@@ -25,7 +26,8 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NoSuchTrainingTypeException.class)
     protected ResponseEntity<String> handleBadTrainingTypeInput(RuntimeException e) {
         String errorBody = "No such training type exists";
-        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(),
+                HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }
@@ -54,7 +56,8 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NoSuchTrainerExistException.class)
     protected ResponseEntity<String> handleBadTrainerInput(RuntimeException e) {
         String errorBody = "No such trainer exists";
-        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(),
+                HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }
@@ -62,7 +65,8 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(NoSuchTraineeExistException.class)
     protected ResponseEntity<String> handleBadTraineeInput(RuntimeException e) {
         String errorBody = "No such trainee exists";
-        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
+        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(),
+                HttpStatus.UNPROCESSABLE_ENTITY, errorBody);
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }

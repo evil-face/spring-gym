@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @GroupSequence({TrainerRequestDTO.class, TrainerCreateGroup.class, TrainerUpdateGroup.class,
-        TrainerActivateGroup.class})
+    TrainerActivateGroup.class})
 public class TrainerRequestDTO {
     @NotBlank(message = "First name cannot be empty", groups = {TrainerCreateGroup.class, TrainerUpdateGroup.class})
     private String firstName;

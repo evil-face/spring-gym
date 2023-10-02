@@ -14,10 +14,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 @GroupSequence({TraineeRequestDTO.class, TraineeCreateGroup.class, TraineeUpdateGroup.class,
-        TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
+    TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
 public class TraineeRequestDTO {
     @NotBlank(message = "Username cannot be empty",
-            groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
+        groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
     private String username;
     @NotBlank(message = "Password cannot be empty", groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class})
     private String password;

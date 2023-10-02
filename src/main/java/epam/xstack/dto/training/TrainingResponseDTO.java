@@ -18,7 +18,7 @@ public class TrainingResponseDTO {
     private Trainer trainer;
 
     @JsonIgnoreProperties({"id", "username", "password", "trainingList", "dateOfBirth", "address",
-            "trainers", "isActive"})
+        "trainers", "isActive"})
     private Trainee trainee;
 
     public String getTrainingName() {
