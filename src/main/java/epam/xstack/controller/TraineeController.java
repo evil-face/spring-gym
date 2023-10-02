@@ -1,15 +1,15 @@
 package epam.xstack.controller;
 
-import epam.xstack.dto.trainee.req.TraineeActivationRequestDTO;
-import epam.xstack.dto.trainee.req.TraineeCreateRequestDTO;
-import epam.xstack.dto.trainee.resp.TraineeGetResponseDTO;
+import epam.xstack.dto.trainee.TraineeResponseDTO;
+import epam.xstack.dto.trainee.validationgroup.TraineeActivateGroup;
+import epam.xstack.dto.trainee.validationgroup.TraineeCreateGroup;
+import epam.xstack.dto.trainee.TraineeRequestDTO;
+import epam.xstack.dto.trainee.validationgroup.TraineeUpdateGroup;
+import epam.xstack.dto.trainee.validationgroup.TraineeUpdateTrainerListGroup;
 import epam.xstack.dto.auth.AuthDTO;
-import epam.xstack.dto.trainee.req.TraineeUpdateRequestDTO;
-import epam.xstack.dto.trainee.resp.TraineeUpdateResponseDTO;
-import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
-import epam.xstack.dto.trainee.resp.UnassignedTrainersResponseDTO;
-import epam.xstack.dto.trainee.req.TraineeGetTrainingListRequestDTO;
-import epam.xstack.dto.trainee.req.TraineeGetTrainingListResponseDTO;
+import epam.xstack.dto.trainer.TrainerResponseDTO;
+import epam.xstack.dto.training.TrainingGetListRequestDTO;
+import epam.xstack.dto.training.TrainingResponseDTO;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -41,6 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/api/v1/trainees", consumes = {"application/JSON"}, produces = {"application/JSON"})
@@ -58,10 +61,11 @@ public final class TraineeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> handleCreateTrainee(@RequestBody @Valid TraineeCreateRequestDTO traineeDTO,
-                                                 BindingResult bindingResult,
-                                                 UriComponentsBuilder uriComponentsBuilder,
-                                                 HttpServletRequest httpServletRequest) {
+    public ResponseEntity<?> handleCreateTrainee(
+            @RequestBody @Validated(TraineeCreateGroup.class) TraineeRequestDTO traineeDTO,
+            BindingResult bindingResult,
+            UriComponentsBuilder uriComponentsBuilder,
+            HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {
@@ -98,8 +102,8 @@ public final class TraineeController {
         }
 
         Optional<Trainee> traineeOpt = traineeService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
-        Optional<TraineeGetResponseDTO> trainee = traineeOpt.map(
-                value -> modelMapper.map(value, TraineeGetResponseDTO.class));
+        Optional<TraineeResponseDTO> trainee = traineeOpt.map(
+                value -> modelMapper.map(value, TraineeResponseDTO.class));
 
         FormattingTuple logMessage = trainee.isPresent()
                 ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
@@ -111,9 +115,9 @@ public final class TraineeController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> handleUpdateTrainee(@PathVariable("id") long id,
-                                                 @RequestBody @Valid TraineeUpdateRequestDTO traineeUpdateRequestDTO,
-                                                 BindingResult bindingResult,
-                                                 HttpServletRequest httpServletRequest) {
+                                        @RequestBody @Validated(TraineeUpdateGroup.class) TraineeRequestDTO traineeDTO,
+                                        BindingResult bindingResult,
+                                        HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {
@@ -123,14 +127,14 @@ public final class TraineeController {
             return ResponseEntity.unprocessableEntity().body(errors);
         }
 
-        Trainee traineeToUpdate = modelMapper.map(traineeUpdateRequestDTO, Trainee.class);
+        Trainee traineeToUpdate = modelMapper.map(traineeDTO, Trainee.class);
         traineeToUpdate.setId(id);
 
         Optional<Trainee> updatedTraineeOpt = traineeService.update(txID, traineeToUpdate,
-                traineeUpdateRequestDTO.getUsername(), traineeUpdateRequestDTO.getPassword());
+                traineeDTO.getUsername(), traineeDTO.getPassword());
 
-        Optional<TraineeUpdateResponseDTO> updatedTraineeResponseDTO = updatedTraineeOpt.map(
-                value -> modelMapper.map(value, TraineeUpdateResponseDTO.class));
+        Optional<TraineeResponseDTO> updatedTraineeResponseDTO = updatedTraineeOpt.map(
+                value -> modelMapper.map(value, TraineeResponseDTO.class));
 
         FormattingTuple logMessage = updatedTraineeResponseDTO.isPresent()
                 ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
@@ -166,9 +170,9 @@ public final class TraineeController {
 
     @PatchMapping("/{id}/activate")
     public ResponseEntity<?> handleChangeActivationStatus(@PathVariable("id") long id,
-                                                          @RequestBody @Valid TraineeActivationRequestDTO requestDTO,
-                                                          BindingResult bindingResult,
-                                                          HttpServletRequest httpServletRequest) {
+                                      @RequestBody @Validated(TraineeActivateGroup.class) TraineeRequestDTO traineeDTO,
+                                      BindingResult bindingResult,
+                                      HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {
@@ -178,8 +182,8 @@ public final class TraineeController {
             return ResponseEntity.unprocessableEntity().body(errors);
         }
 
-        traineeService.changeActivationStatus(txID, id, requestDTO.getIsActive(),
-                requestDTO.getUsername(), requestDTO.getPassword());
+        traineeService.changeActivationStatus(txID, id, traineeDTO.getIsActive(),
+                traineeDTO.getUsername(), traineeDTO.getPassword());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
@@ -203,8 +207,8 @@ public final class TraineeController {
         List<Trainer> trainers = traineeService.getPotentialTrainersForTrainee(
                 txID, id, authDTO.getUsername(), authDTO.getPassword());
 
-        List<UnassignedTrainersResponseDTO> response = trainers.stream()
-                .map(e -> modelMapper.map(e, UnassignedTrainersResponseDTO.class))
+        List<TrainerResponseDTO> response = trainers.stream()
+                .map(e -> modelMapper.map(e, TrainerResponseDTO.class))
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
@@ -214,16 +218,16 @@ public final class TraineeController {
 
     @GetMapping("/{id}/trainings")
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
-                                                     @RequestBody @Valid TraineeGetTrainingListRequestDTO requestDTO,
-                                                     BindingResult bindingResult,
-                                                     HttpServletRequest httpServletRequest) {
+                                                             @RequestBody @Valid TrainingGetListRequestDTO requestDTO,
+                                                             BindingResult bindingResult,
+                                                             HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         List<Training> trainings = traineeService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
 
-        List<TraineeGetTrainingListResponseDTO> response = trainings.stream()
-                .map(e -> modelMapper.map(e, TraineeGetTrainingListResponseDTO.class))
+        List<TrainingResponseDTO> response = trainings.stream()
+                .map(e -> modelMapper.map(e, TrainingResponseDTO.class))
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
@@ -233,9 +237,9 @@ public final class TraineeController {
 
     @PutMapping("/{id}/trainers")
     public ResponseEntity<?> handleUpdateTraineeTrainerList(@PathVariable("id") long id,
-                                                 @RequestBody @Valid TraineeUpdateTrainerListRequestDTO requestDTO,
-                                                 BindingResult bindingResult,
-                                                 HttpServletRequest httpServletRequest) {
+                             @RequestBody @Validated(TraineeUpdateTrainerListGroup.class) TraineeRequestDTO traineeDTO,
+                             BindingResult bindingResult,
+                             HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {
@@ -245,11 +249,11 @@ public final class TraineeController {
             return ResponseEntity.unprocessableEntity().body(errors);
         }
 
-        List<Trainer> updatedTrainersList = traineeService.updateTrainerList(txID, id, requestDTO);
+        List<Trainer> updatedTrainersList = traineeService.updateTrainerList(txID, id, traineeDTO);
 
-        List<UnassignedTrainersResponseDTO> responseDTO = updatedTrainersList.stream()
-                .map(trainer -> modelMapper.map(trainer, UnassignedTrainersResponseDTO.class))
-                .toList();
+        Set<TrainerResponseDTO> responseDTO = updatedTrainersList.stream()
+                .map(trainer -> modelMapper.map(trainer, TrainerResponseDTO.class))
+                .collect(Collectors.toSet());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 

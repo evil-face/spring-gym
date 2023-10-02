@@ -1,7 +1,7 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TrainerDAO;
-import epam.xstack.dto.trainer.req.TrainerGetTrainingListRequestDTO;
+import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
@@ -50,7 +50,9 @@ public final class TrainerService {
 
     public Optional<Trainer> findById(String txID, long id, String username, String password) {
         if (authService.authenticate(txID, id, username, password)) {
-            return trainerDAO.findById(txID, id);
+            Optional<Trainer> trainerOpt = trainerDAO.findById(txID, id);
+            trainerOpt.ifPresent(value -> value.setUsername(null));
+            return trainerOpt;
         }
 
         return Optional.empty();
@@ -89,9 +91,11 @@ public final class TrainerService {
 //    }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
-                                                    TrainerGetTrainingListRequestDTO requestDTO) {
+                                                    TrainingGetListRequestDTO requestDTO) {
         if (authService.authenticate(txID, id, username, password)) {
-            return trainerDAO.getTrainingsWithFiltering(txID, id, requestDTO);
+            List<Training> trainings = trainerDAO.getTrainingsWithFiltering(txID, id, requestDTO);
+            trainings.forEach(training -> training.setTrainer(null));
+            return trainings;
         }
 
         return new ArrayList<>();

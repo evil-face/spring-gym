@@ -1,6 +1,6 @@
 package epam.xstack.dao;
 
-import epam.xstack.dto.trainer.req.TrainerGetTrainingListRequestDTO;
+import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
@@ -131,7 +131,7 @@ public class TrainerDAO {
                 txID, username, id, newStatus);
     }
 
-    public List<Training> getTrainingsWithFiltering(String txID, long id, TrainerGetTrainingListRequestDTO criteria) {
+    public List<Training> getTrainingsWithFiltering(String txID, long id, TrainingGetListRequestDTO criteria) {
         Session session = sessionFactory.getCurrentSession();
 
         Trainer trainer = session.get(Trainer.class, id);
@@ -190,7 +190,7 @@ public class TrainerDAO {
     }
 
     private CriteriaQuery<Training> buildCriteriaQuery(Session session, String txID,
-                                                       long id, TrainerGetTrainingListRequestDTO criteria) {
+                                                       long id, TrainingGetListRequestDTO criteria) {
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Training> cr = cb.createQuery(Training.class);
         Root<Training> root = cr.from(Training.class);

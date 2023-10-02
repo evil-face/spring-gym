@@ -1,6 +1,6 @@
 package epam.xstack.dao;
 
-import epam.xstack.dto.trainee.req.TraineeGetTrainingListRequestDTO;
+import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
 import epam.xstack.exception.ForbiddenException;
 import epam.xstack.model.Trainee;
@@ -147,7 +147,7 @@ public class TraineeDAO {
                 txID, username, id, newStatus);
     }
 
-    public List<Training> getTrainingsWithFiltering(String txID, long id, TraineeGetTrainingListRequestDTO criteria) {
+    public List<Training> getTrainingsWithFiltering(String txID, long id, TrainingGetListRequestDTO criteria) {
         Session session = sessionFactory.getCurrentSession();
 
         Trainee trainee = session.get(Trainee.class, id);
@@ -221,7 +221,7 @@ public class TraineeDAO {
     }
 
     private CriteriaQuery<Training> buildCriteriaQuery(Session session, String txID,
-                                                       long id, TraineeGetTrainingListRequestDTO criteria) {
+                                                       long id, TrainingGetListRequestDTO criteria) {
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Training> cr = cb.createQuery(Training.class);
         Root<Training> root = cr.from(Training.class);

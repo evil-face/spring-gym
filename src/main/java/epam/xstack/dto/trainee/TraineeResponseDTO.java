@@ -1,24 +1,30 @@
-package epam.xstack.dto.trainee.req;
+package epam.xstack.dto.trainee;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Past;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import epam.xstack.model.Trainer;
+
 import java.time.LocalDate;
+import java.util.Set;
 
-public final class TraineeUpdateRequestDTO {
-    @NotBlank(message = "Username cannot be empty")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class TraineeResponseDTO {
     private String username;
-    @NotBlank(message = "Password cannot be empty")
-    private String password;
-    @NotBlank(message = "First name cannot be empty")
     private String firstName;
-    @NotBlank(message = "Last name cannot be empty")
     private String lastName;
-    @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
     private String address;
-    @NotNull
     private Boolean isActive;
+    @JsonIgnoreProperties({"id", "password", "trainingList", "trainees", "isActive"})
+    private Set<Trainer> trainers;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getFirstName() {
         return firstName;
@@ -52,27 +58,19 @@ public final class TraineeUpdateRequestDTO {
         this.address = address;
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
     public Boolean getIsActive() {
         return isActive;
     }
 
     public void setIsActive(Boolean active) {
         isActive = active;
+    }
+
+    public Set<Trainer> getTrainers() {
+        return trainers;
+    }
+
+    public void setTrainers(Set<Trainer> trainers) {
+        this.trainers = trainers;
     }
 }

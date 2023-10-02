@@ -1,8 +1,8 @@
 package epam.xstack.service;
 
 import epam.xstack.dao.TraineeDAO;
-import epam.xstack.dto.trainee.req.TraineeUpdateTrainerListRequestDTO;
-import epam.xstack.dto.trainee.req.TraineeGetTrainingListRequestDTO;
+import epam.xstack.dto.trainee.TraineeRequestDTO;
+import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
 import epam.xstack.exception.NoSuchTrainerExistException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
@@ -59,7 +59,9 @@ public final class TraineeService {
 
     public Optional<Trainee> findById(String txID, long id, String username, String password) {
         if (authService.authenticate(txID, id, username, password)) {
-            return traineeDAO.findById(txID, id);
+            Optional<Trainee> traineeOpt = traineeDAO.findById(txID, id);
+            traineeOpt.ifPresent(value -> value.setUsername(null));
+            return traineeOpt;
         }
 
         return Optional.empty();
@@ -102,9 +104,11 @@ public final class TraineeService {
 //    }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
-                                                    TraineeGetTrainingListRequestDTO requestDTO) {
+                                                    TrainingGetListRequestDTO requestDTO) {
         if (authService.authenticate(txID, id, username, password)) {
-            return traineeDAO.getTrainingsWithFiltering(txID, id, requestDTO);
+            List<Training> trainings = traineeDAO.getTrainingsWithFiltering(txID, id, requestDTO);
+            trainings.forEach(training -> training.setTrainee(null));
+            return trainings;
         }
 
         return new ArrayList<>();
@@ -129,18 +133,18 @@ public final class TraineeService {
     }
 
     // no auth in task requirements!
-    public List<Trainer> updateTrainerList(String txID, long id, TraineeUpdateTrainerListRequestDTO requestDTO) {
+    public List<Trainer> updateTrainerList(String txID, long id, TraineeRequestDTO traineeRequestDTO) {
         List<Trainer> allTrainers = trainerService.findAll();
 
         List<Trainer> updatedList = allTrainers.stream()
-                .filter(trainer -> requestDTO.getTrainers().contains(trainer.getUsername()))
+                .filter(trainer -> traineeRequestDTO.getTrainers().contains(trainer.getUsername()))
                 .toList();
 
         if (updatedList.isEmpty()) {
             throw new NoSuchTrainerExistException(txID);
         }
 
-        return traineeDAO.updateTrainerList(txID, id, requestDTO.getUsername(), updatedList);
+        return traineeDAO.updateTrainerList(txID, id, traineeRequestDTO.getUsername(), updatedList);
     }
 
     private void checkIfNotRegisteredYet(String txID, Trainee newTrainee) {
