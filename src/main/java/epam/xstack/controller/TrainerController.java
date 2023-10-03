@@ -12,6 +12,8 @@ import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +58,10 @@ public final class TrainerController {
     }
 
     @PostMapping
+    @Operation(summary = "Create new trainer",
+        responses = {
+            @ApiResponse(responseCode = "201", description = "Trainer created successfully"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleCreateTrainer(
             @RequestBody @Validated(TrainerCreateGroup.class) TrainerRequestDTO trainerDTO,
             BindingResult bindingResult,
@@ -84,6 +90,13 @@ public final class TrainerController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get trainer",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Trainer found"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetTrainer(@PathVariable("id") long id,
                                               @RequestBody @Valid AuthDTO authDTO,
                                               BindingResult bindingResult,
@@ -110,6 +123,13 @@ public final class TrainerController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update trainer",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Trainer updated successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleUpdateTrainer(@PathVariable("id") long id,
                                          @RequestBody @Validated(TrainerUpdateGroup.class) TrainerRequestDTO trainerDTO,
                                          BindingResult bindingResult,
@@ -142,6 +162,13 @@ public final class TrainerController {
     }
 
     @PatchMapping("/{id}/activate")
+    @Operation(summary = "Activate and deactivate trainer",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Changed activation status successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleChangeActivationStatus(@PathVariable("id") long id,
                                       @RequestBody @Validated(TrainerActivateGroup.class) TrainerRequestDTO trainerDTO,
                                       BindingResult bindingResult,
@@ -164,6 +191,13 @@ public final class TrainerController {
     }
 
     @GetMapping("/{id}/trainings")
+    @Operation(summary = "Get all trainings for trainer with filtering",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "List of trainings retrieved"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainer not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
                                                      @RequestBody @Valid TrainingGetListRequestDTO requestDTO,
                                                      BindingResult bindingResult,

@@ -14,6 +14,8 @@ import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.service.TraineeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,10 @@ public final class TraineeController {
     }
 
     @PostMapping
+    @Operation(summary = "Create new trainee",
+        responses = {
+            @ApiResponse(responseCode = "201", description = "Trainee created successfully"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleCreateTrainee(
             @RequestBody @Validated(TraineeCreateGroup.class) TraineeRequestDTO traineeDTO,
             BindingResult bindingResult,
@@ -88,6 +94,13 @@ public final class TraineeController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Get trainee",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Trainee found"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetTrainee(@PathVariable("id") long id,
                                               @RequestBody @Valid AuthDTO authDTO,
                                               BindingResult bindingResult,
@@ -114,6 +127,13 @@ public final class TraineeController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Update trainee",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Trainee updated successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleUpdateTrainee(@PathVariable("id") long id,
                                         @RequestBody @Validated(TraineeUpdateGroup.class) TraineeRequestDTO traineeDTO,
                                         BindingResult bindingResult,
@@ -145,6 +165,13 @@ public final class TraineeController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Delete trainee",
+        responses = {
+            @ApiResponse(responseCode = "204", description = "Trainee deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleDeleteTrainee(@PathVariable("id") long id,
                                                  @RequestBody @Valid AuthDTO authDTO,
                                                  BindingResult bindingResult,
@@ -169,6 +196,13 @@ public final class TraineeController {
     }
 
     @PatchMapping("/{id}/activate")
+    @Operation(summary = "Activate and deactivate trainee",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Changed activation status successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleChangeActivationStatus(@PathVariable("id") long id,
                                       @RequestBody @Validated(TraineeActivateGroup.class) TraineeRequestDTO traineeDTO,
                                       BindingResult bindingResult,
@@ -191,6 +225,13 @@ public final class TraineeController {
     }
 
     @GetMapping("/{id}/unassigned-trainers")
+    @Operation(summary = "Get unassigned trainers for trainee",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "List of potential trainers retrieved"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetUnassignedTrainersForTrainee(@PathVariable("id") long id,
                                                                    @RequestBody @Valid AuthDTO authDTO,
                                                                    BindingResult bindingResult,
@@ -217,6 +258,13 @@ public final class TraineeController {
     }
 
     @GetMapping("/{id}/trainings")
+    @Operation(summary = "Get all trainings for trainee with filtering",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "List of trainings retrieved"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
                                                              @RequestBody @Valid TrainingGetListRequestDTO requestDTO,
                                                              BindingResult bindingResult,
@@ -243,6 +291,11 @@ public final class TraineeController {
     }
 
     @PutMapping("/{id}/trainers")
+    @Operation(summary = "Update trainee's list of assigned trainers",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "List of trainers successfully updated"),
+            @ApiResponse(responseCode = "404", description = "Trainee not found"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleUpdateTraineeTrainerList(@PathVariable("id") long id,
                              @RequestBody @Validated(TraineeUpdateTrainerListGroup.class) TraineeRequestDTO traineeDTO,
                              BindingResult bindingResult,

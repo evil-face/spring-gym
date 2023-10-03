@@ -4,6 +4,8 @@ import epam.xstack.dto.auth.PasswordChangeRequestDTO;
 import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.model.User;
 import epam.xstack.service.AuthenticationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +41,12 @@ public final class AuthController {
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "Authenticate user",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User authenticated successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleLogin(@PathVariable("id") long id,
                                          @RequestBody @Valid AuthDTO authDTO,
                                          BindingResult bindingResult,
@@ -64,6 +72,13 @@ public final class AuthController {
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "Change user password",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "User changed password successfully"),
+            @ApiResponse(responseCode = "401", description = "Bad credentials"),
+            @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
+            @ApiResponse(responseCode = "404", description = "User with ID not found"),
+            @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleChangePassword(@PathVariable("id") long id,
                                                   @RequestBody @Valid PasswordChangeRequestDTO requestDTO,
                                                   BindingResult bindingResult,
@@ -86,7 +101,6 @@ public final class AuthController {
             LOGGER.info(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
             return ResponseEntity.notFound().build();
         }
-
     }
 
     private Map<String, String> buildErrorMessage(BindingResult bindingResult) {

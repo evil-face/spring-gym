@@ -4,6 +4,8 @@ import epam.xstack.dto.training.TrainingCreateRequestDTO;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,9 @@ public final class TrainingController {
     }
 
     @GetMapping("/types")
+    @Operation(summary = "Get all existing training types",
+        responses = {
+            @ApiResponse(responseCode = "200", description = "Training types list retrieved successfully")})
     public ResponseEntity<List<TrainingType>> handleGetAllTrainingTypes(HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
@@ -48,6 +53,10 @@ public final class TrainingController {
     }
 
     @PostMapping(consumes = {"application/JSON"})
+    @Operation(summary = "Create new training",
+        responses = {
+            @ApiResponse(responseCode = "201", description = "Training created successfully"),
+            @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleCreateTraining(@RequestBody @Valid TrainingCreateRequestDTO trainingDTO,
                                                   BindingResult bindingResult,
                                                   UriComponentsBuilder uriComponentsBuilder,
