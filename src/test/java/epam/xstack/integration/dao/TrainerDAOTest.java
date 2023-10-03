@@ -161,8 +161,9 @@ class TrainerDAOTest {
 
         List<Training> actualList = trainerDAO.getTrainingsWithFiltering(TX_ID, trainer.getId(), request);
 
-        assertThat(actualList).hasSameSizeAs(trainer.getTrainingList());
-        assertThat(actualList).hasSameElementsAs(trainer.getTrainingList());
+        assertThat(actualList)
+                .hasSameSizeAs(trainer.getTrainingList())
+                .hasSameElementsAs(trainer.getTrainingList());
     }
 
     @Test
@@ -175,8 +176,9 @@ class TrainerDAOTest {
 
         List<Training> actualList = trainerDAO.getTrainingsWithFiltering(TX_ID, trainer.getId(), request);
 
-        assertThat(actualList).hasSameSizeAs(trainer.getTrainingList());
-        assertThat(actualList).hasSameElementsAs(trainer.getTrainingList());
+        assertThat(actualList)
+                .hasSameSizeAs(trainer.getTrainingList())
+                .hasSameElementsAs(trainer.getTrainingList());
     }
 
     @Test
@@ -241,7 +243,7 @@ class TrainerDAOTest {
         Optional<TrainingType> actual = trainerDAO.trainingTypeExistsById(3);
 
         assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
     }
 
     private Trainer getTestTrainer() {

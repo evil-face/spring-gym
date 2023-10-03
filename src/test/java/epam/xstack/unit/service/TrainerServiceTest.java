@@ -102,7 +102,7 @@ class TrainerServiceTest {
         Optional<Trainer> actual = trainerService.findById(TX_ID, 1, "test", "test");
 
         assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
         assertThat(actual.get().getUsername()).isNull();
     }
 
@@ -127,7 +127,7 @@ class TrainerServiceTest {
         Optional<Trainer> actual = trainerService.update(TX_ID, expected, "test", "test");
 
         assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
         assertThat(actual.get().getUsername()).isNotNull();
     }
 

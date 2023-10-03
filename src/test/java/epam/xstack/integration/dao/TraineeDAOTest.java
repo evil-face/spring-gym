@@ -179,8 +179,9 @@ class TraineeDAOTest {
 
         List<Training> actualList = traineeDAO.getTrainingsWithFiltering(TX_ID, trainee.getId(), request);
 
-        assertThat(actualList).hasSameSizeAs(trainee.getTrainingList());
-        assertThat(actualList).hasSameElementsAs(trainee.getTrainingList());
+        assertThat(actualList)
+                .hasSameSizeAs(trainee.getTrainingList())
+                .hasSameElementsAs(trainee.getTrainingList());
     }
 
     @Test
@@ -193,8 +194,9 @@ class TraineeDAOTest {
 
         List<Training> actualList = traineeDAO.getTrainingsWithFiltering(TX_ID, trainee.getId(), request);
 
-        assertThat(actualList).hasSameSizeAs(trainee.getTrainingList());
-        assertThat(actualList).hasSameElementsAs(trainee.getTrainingList());
+        assertThat(actualList)
+                .hasSameSizeAs(trainee.getTrainingList())
+                .hasSameElementsAs(trainee.getTrainingList());
     }
 
     @Test

@@ -42,14 +42,14 @@ public class AuthControllerTest {
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(eq(authDTO), eq(User.class))).thenReturn(user);
+        when(modelMapper.map(authDTO, User.class)).thenReturn(user);
         when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
 
         ResponseEntity<?> response = authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         verify(authService).authenticate(anyString(), eq(1L), anyString(), anyString());
-        verify(modelMapper).map(eq(authDTO), eq(User.class));
+        verify(modelMapper).map(authDTO, User.class);
     }
 
     @Test
@@ -77,14 +77,14 @@ public class AuthControllerTest {
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(eq(authDTO), eq(User.class))).thenReturn(user);
+        when(modelMapper.map(authDTO, User.class)).thenReturn(user);
         when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(false);
 
         ResponseEntity<?> response = authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
         verify(authService).authenticate(anyString(), eq(1L), anyString(), anyString());
-        verify(modelMapper).map(eq(authDTO), eq(User.class));
+        verify(modelMapper).map(authDTO, User.class);
     }
 
     @Test

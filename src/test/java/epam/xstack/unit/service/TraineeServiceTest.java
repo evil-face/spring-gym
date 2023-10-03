@@ -87,7 +87,7 @@ class TraineeServiceTest {
         Optional<Trainee> actual = traineeService.findById(TX_ID, 1, "test", "test");
 
         assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
         assertThat(actual.get().getUsername()).isNull();
     }
 
@@ -110,7 +110,7 @@ class TraineeServiceTest {
         Optional<Trainee> actual = traineeService.update(TX_ID, new Trainee(), "test", "test");
 
         assertThat(actual).isPresent();
-        assertThat(actual.get()).isEqualTo(expected);
+        assertThat(actual).contains(expected);
         assertThat(actual.get().getUsername()).isNotNull();
     }
 
@@ -168,7 +168,7 @@ class TraineeServiceTest {
         List<Trainer> actualList = traineeService.getPotentialTrainersForTrainee(
                 TX_ID, 1, trainee.getUsername(), trainee.getPassword());
 
-        assertThat(actualList.size()).isLessThan(initialSize);
+        assertThat(actualList).hasSizeLessThan(initialSize);
         assertThat(actualList).doesNotContain(initialTrainer);
     }
 
@@ -208,8 +208,9 @@ class TraineeServiceTest {
 
         List<Trainer> actualList = traineeService.updateTrainerList(TX_ID, 1, request);
 
-        assertThat(actualList).hasSameSizeAs(updatedTrainersUsernames);
-        assertThat(actualList).hasSameElementsAs(updatedTrainersList);
+        assertThat(actualList)
+                .hasSameSizeAs(updatedTrainersUsernames)
+                .hasSameElementsAs(updatedTrainersList);
     }
 
     @Test

@@ -41,7 +41,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 
 @ExtendWith(MockitoExtension.class)
-public class TraineeControllerTest {
+class TraineeControllerTest {
     @InjectMocks
     TraineeController traineeController;
     @Mock

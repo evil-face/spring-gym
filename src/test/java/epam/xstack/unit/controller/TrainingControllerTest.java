@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-public class TrainingControllerTest {
+class TrainingControllerTest {
     @InjectMocks
     TrainingController trainingController;
     @Mock
