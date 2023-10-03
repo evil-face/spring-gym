@@ -55,4 +55,15 @@ VALUES
     (2, 7, 'Cardio Workout 4', 2, '2023-10-06', 90),
     (3, 8, 'Yoga Session 4', 3, '2023-10-07', 75),
     (4, 9, 'Pilates Class 4', 4, '2023-10-08', 45),
-    (5, 10, 'CrossFit Training 4', 5, '2023-10-09', 120);
+    (5, 10, 'CrossFit Training 4', 5, '2023-10-09', 120),
+    (3, 7, 'Cardio Training 1', 2, '2023-10-11', 55),
+    (3, 7, 'Cardio Training 2', 2, '2023-10-12', 65);
+
+INSERT INTO Trainee_Trainer (trainee_id, trainer_id)
+VALUES
+	(1, 6),
+    (2, 7),
+    (3, 7),
+    (3, 8),
+    (4, 9),
+    (5, 10);

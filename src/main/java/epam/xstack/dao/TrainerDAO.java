@@ -29,7 +29,7 @@ import java.util.Optional;
 
 @Component
 @Transactional(readOnly = true)
-public final class TrainerDAO {
+public class TrainerDAO {
     private final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerDAO.class);
 

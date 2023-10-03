@@ -1,6 +1,8 @@
-package epam.xstack.dao;
+package epam.xstack.integration.dao;
 
 import epam.xstack.config.TestConfig;
+import epam.xstack.dao.UserDAO;
+import epam.xstack.model.Trainee;
 import epam.xstack.model.User;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,8 +23,8 @@ import java.util.List;
 import java.util.Optional;
 
 @SpringJUnitConfig(TestConfig.class)
+@WebAppConfiguration
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
-@Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class UserDAOTest {
     @Autowired
@@ -30,6 +33,7 @@ class UserDAOTest {
     private DataSource dataSource;
     @Autowired
     private SessionFactory sessionFactory;
+    private static final String TX_ID = "12345";
 
     @BeforeAll
     void initDatabase() {
@@ -39,8 +43,8 @@ class UserDAOTest {
     }
 
     @Test
-    void testFindByUsername() {
-        Optional<User> actual = userDAO.findByUsername("alice");
+    void testFindByUsernameSuccess() {
+        Optional<User> actual = userDAO.findByUsername(TX_ID, "alice");
 
         assertThat(actual).isPresent();
         assertThat(actual.get().getUsername()).isEqualTo("alice");
@@ -49,7 +53,7 @@ class UserDAOTest {
 
     @Test
     void testFindByUsernameNotExist() {
-        Optional<User> actual = userDAO.findByUsername("no such person");
+        Optional<User> actual = userDAO.findByUsername(TX_ID, "no such person");
 
         assertThat(actual).isEmpty();
     }
@@ -69,15 +73,27 @@ class UserDAOTest {
     }
 
     @Test
-    void testChangeActivationStatus() {
+    @Transactional
+    void testUpdatePasswordSuccess() {
+        String expected = "new_password";
+
+        boolean result = userDAO.updatePassword(TX_ID, "bob", expected);
+
         Session session = sessionFactory.getCurrentSession();
-        User expected = session.get(User.class, 1L);
-        assertThat(expected.isActive()).isTrue();
+        Trainee actual = session.get(Trainee.class, 2L);
 
-        userDAO.changeActivationStatus(1);
-        assertThat(expected.isActive()).isFalse();
-
-        userDAO.changeActivationStatus(1);
-        assertThat(expected.isActive()).isTrue();
+        assertThat(result).isTrue();
+        assertThat(actual.getPassword()).isEqualTo(expected);
     }
+
+    @Test
+    @Transactional
+    void testUpdatePasswordNoSuchUser() {
+        String expected = "new_password";
+
+        boolean result = userDAO.updatePassword(TX_ID, "no such person", expected);
+
+        assertThat(result).isFalse();
+    }
+
 }
