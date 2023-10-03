@@ -39,10 +39,10 @@ public final class AuthController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> login(@PathVariable("id") long id,
-                                   @RequestBody @Valid AuthDTO authDTO,
-                                   BindingResult bindingResult,
-                                   HttpServletRequest httpServletRequest) {
+    public ResponseEntity<?> handleLogin(@PathVariable("id") long id,
+                                         @RequestBody @Valid AuthDTO authDTO,
+                                         BindingResult bindingResult,
+                                         HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         if (bindingResult.hasErrors()) {

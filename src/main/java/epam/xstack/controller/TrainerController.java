@@ -125,9 +125,7 @@ public final class TrainerController {
 
         Trainer trainerToUpdate = modelMapper.map(trainerDTO, Trainer.class);
         trainerToUpdate.setId(id);
-        trainerToUpdate.setSpecialization(
-                new TrainingType(trainerDTO.getSpecialization(), "")
-        );
+        trainerToUpdate.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
 
         Optional<Trainer> updatedTrainerOpt = trainerService.update(txID, trainerToUpdate,
                 trainerDTO.getUsername(), trainerDTO.getPassword());

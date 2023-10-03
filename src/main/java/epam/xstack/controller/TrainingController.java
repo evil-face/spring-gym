@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping(value = "api/v1/trainings")
+@RequestMapping(value = "api/v1/trainings", produces = {"application/JSON"})
 public final class TrainingController {
     private final TrainingService trainingService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainingController.class);
@@ -38,7 +38,7 @@ public final class TrainingController {
     }
 
     @GetMapping("/types")
-    public ResponseEntity<List<TrainingType>> handleGetAll(HttpServletRequest httpServletRequest) {
+    public ResponseEntity<List<TrainingType>> handleGetAllTrainingTypes(HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         List<TrainingType> response = trainingService.findAllTrainingTypes(txID);
@@ -47,7 +47,7 @@ public final class TrainingController {
         return ResponseEntity.ok().body(response);
     }
 
-    @PostMapping
+    @PostMapping(consumes = {"application/JSON"})
     public ResponseEntity<?> handleCreateTraining(@RequestBody @Valid TrainingCreateRequestDTO trainingDTO,
                                                   BindingResult bindingResult,
                                                   UriComponentsBuilder uriComponentsBuilder,
