@@ -2,6 +2,7 @@ package epam.xstack.controller;
 
 import epam.xstack.dto.auth.PasswordChangeRequestDTO;
 import epam.xstack.dto.auth.AuthDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.User;
 import epam.xstack.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,8 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/v1/auth", consumes = {"application/JSON"}, produces = {"application/JSON"})
@@ -31,7 +31,6 @@ public final class AuthController {
     private final AuthenticationService authService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthController.class);
-    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
     private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
@@ -52,13 +51,7 @@ public final class AuthController {
                                          BindingResult bindingResult,
                                          HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         User user = modelMapper.map(authDTO, User.class);
 
@@ -84,13 +77,7 @@ public final class AuthController {
                                                   BindingResult bindingResult,
                                                   HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         boolean success = authService.updatePassword(txID, id, requestDTO);
 
@@ -103,12 +90,12 @@ public final class AuthController {
         }
     }
 
-    private Map<String, String> buildErrorMessage(BindingResult bindingResult) {
-        Map<String, String> errors = new HashMap<>();
+    private void validatePayload(String txID, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + " - " + error.getDefaultMessage()).toList();
 
-        bindingResult.getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
-
-        return errors;
+            throw new ValidationException(txID, errors.toString());
+        }
     }
 }
