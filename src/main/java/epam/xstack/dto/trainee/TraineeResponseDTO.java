@@ -1,5 +1,6 @@
 package epam.xstack.dto.trainee;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import epam.xstack.model.Trainer;
@@ -12,6 +13,7 @@ public final class TraineeResponseDTO {
     private String username;
     private String firstName;
     private String lastName;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
     private String address;
     private Boolean isActive;

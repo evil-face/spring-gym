@@ -1,5 +1,6 @@
 package epam.xstack.dto.training;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import epam.xstack.model.Trainee;
@@ -11,6 +12,7 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class TrainingResponseDTO {
     private String trainingName;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate trainingDate;
     private TrainingType trainingType;
     private Integer trainingDuration;
