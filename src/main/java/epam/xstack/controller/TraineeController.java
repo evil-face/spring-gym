@@ -10,6 +10,7 @@ import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.trainer.TrainerResponseDTO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
@@ -19,12 +20,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,9 +41,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -53,7 +52,6 @@ public final class TraineeController {
     private final TraineeService traineeService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TraineeController.class);
-    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
     private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
@@ -68,18 +66,12 @@ public final class TraineeController {
             @ApiResponse(responseCode = "201", description = "Trainee created successfully"),
             @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleCreateTrainee(
-            @RequestBody @Validated(TraineeCreateGroup.class) TraineeRequestDTO traineeDTO,
-            BindingResult bindingResult,
-            UriComponentsBuilder uriComponentsBuilder,
-            HttpServletRequest httpServletRequest) {
+                                        @RequestBody @Validated(TraineeCreateGroup.class) TraineeRequestDTO traineeDTO,
+                                        BindingResult bindingResult,
+                                        UriComponentsBuilder uriComponentsBuilder,
+                                        HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Trainee newTrainee = modelMapper.map(traineeDTO, Trainee.class);
         Trainee createdTrainee = traineeService.createTrainee(txID, newTrainee);
@@ -106,24 +98,14 @@ public final class TraineeController {
                                               BindingResult bindingResult,
                                               HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Optional<Trainee> traineeOpt = traineeService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
-        Optional<TraineeResponseDTO> traineeResponseDTO = traineeOpt.map(
+        Optional<TraineeResponseDTO> traineeResponseDTOOpt = traineeOpt.map(
                 value -> modelMapper.map(value, TraineeResponseDTO.class));
 
-        FormattingTuple logMessage = traineeResponseDTO.isPresent()
-                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
-                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
-        LOGGER.info(logMessage.getMessage());
-
-        return ResponseEntity.of(traineeResponseDTO);
+        LOGGER.info(getLogMessage(txID, traineeResponseDTOOpt));
+        return ResponseEntity.of(traineeResponseDTOOpt);
     }
 
     @PutMapping("/{id}")
@@ -139,13 +121,7 @@ public final class TraineeController {
                                         BindingResult bindingResult,
                                         HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Trainee traineeToUpdate = modelMapper.map(traineeDTO, Trainee.class);
         traineeToUpdate.setId(id);
@@ -153,15 +129,11 @@ public final class TraineeController {
         Optional<Trainee> updatedTraineeOpt = traineeService.update(txID, traineeToUpdate,
                 traineeDTO.getUsername(), traineeDTO.getPassword());
 
-        Optional<TraineeResponseDTO> updatedTraineeResponseDTO = updatedTraineeOpt.map(
+        Optional<TraineeResponseDTO> updatedTraineeResponseDTOOpt = updatedTraineeOpt.map(
                 value -> modelMapper.map(value, TraineeResponseDTO.class));
 
-        FormattingTuple logMessage = updatedTraineeResponseDTO.isPresent()
-                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
-                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
-        LOGGER.info(logMessage.getMessage());
-
-        return ResponseEntity.of(updatedTraineeResponseDTO);
+        LOGGER.info(getLogMessage(txID, updatedTraineeResponseDTOOpt));
+        return ResponseEntity.of(updatedTraineeResponseDTOOpt);
     }
 
     @DeleteMapping("/{id}")
@@ -177,13 +149,7 @@ public final class TraineeController {
                                                  BindingResult bindingResult,
                                                  HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Trainee traineeToDelete = modelMapper.map(authDTO, Trainee.class);
         traineeToDelete.setId(id);
@@ -191,7 +157,6 @@ public final class TraineeController {
         traineeService.delete(txID, traineeToDelete);
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.NO_CONTENT);
-
         return ResponseEntity.noContent().build();
     }
 
@@ -208,19 +173,12 @@ public final class TraineeController {
                                       BindingResult bindingResult,
                                       HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         traineeService.changeActivationStatus(txID, id, traineeDTO.getIsActive(),
                 traineeDTO.getUsername(), traineeDTO.getPassword());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok().build();
     }
 
@@ -237,13 +195,7 @@ public final class TraineeController {
                                                                    BindingResult bindingResult,
                                                                    HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         List<Trainer> trainers = traineeService.getPotentialTrainersForTrainee(
                 txID, id, authDTO.getUsername(), authDTO.getPassword());
@@ -253,7 +205,6 @@ public final class TraineeController {
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok().body(responseDTO);
     }
 
@@ -270,13 +221,7 @@ public final class TraineeController {
                                                              BindingResult bindingResult,
                                                              HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         List<Training> trainings = traineeService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
@@ -286,7 +231,6 @@ public final class TraineeController {
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok().body(responseDTO);
     }
 
@@ -301,13 +245,7 @@ public final class TraineeController {
                              BindingResult bindingResult,
                              HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         List<Trainer> updatedTrainersList = traineeService.updateTrainerList(txID, id, traineeDTO);
 
@@ -317,16 +255,21 @@ public final class TraineeController {
                 .collect(Collectors.toSet());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok(responseDTO);
     }
 
-    private Map<String, String> buildErrorMessage(BindingResult bindingResult) {
-        Map<String, String> errors = new HashMap<>();
+    private void validatePayload(String txID, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + " - " + error.getDefaultMessage()).toList();
 
-        bindingResult.getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
+            throw new ValidationException(txID, errors.toString());
+        }
+    }
 
-        return errors;
+    private String getLogMessage(String txID, Optional<?> optional) {
+        return optional.isPresent()
+                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK).getMessage()
+                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND).getMessage();
     }
 }

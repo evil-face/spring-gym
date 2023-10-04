@@ -70,4 +70,12 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.unprocessableEntity().body(errorBody);
     }
+
+    @ExceptionHandler(ValidationException.class)
+    protected ResponseEntity<String> handleValidationException(ValidationException e) {
+        EXCEPTION_HANDLER_LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, e.getMessage(),
+                HttpStatus.UNPROCESSABLE_ENTITY, e.getErrors());
+
+        return ResponseEntity.unprocessableEntity().body(e.getErrors());
+    }
 }

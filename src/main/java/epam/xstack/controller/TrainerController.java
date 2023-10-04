@@ -8,6 +8,7 @@ import epam.xstack.dto.trainer.validationgroup.TrainerCreateGroup;
 import epam.xstack.dto.trainer.validationgroup.TrainerUpdateGroup;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
@@ -17,7 +18,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -37,9 +37,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.net.URI;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -48,7 +46,6 @@ public final class TrainerController {
     private final TrainerService trainerService;
     private final ModelMapper modelMapper;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerController.class);
-    private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
     private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
@@ -63,18 +60,12 @@ public final class TrainerController {
             @ApiResponse(responseCode = "201", description = "Trainer created successfully"),
             @ApiResponse(responseCode = "422", description = "Bad input, check body for error messages")})
     public ResponseEntity<?> handleCreateTrainer(
-            @RequestBody @Validated(TrainerCreateGroup.class) TrainerRequestDTO trainerDTO,
-            BindingResult bindingResult,
-            UriComponentsBuilder uriComponentsBuilder,
-            HttpServletRequest httpServletRequest) {
+                                        @RequestBody @Validated(TrainerCreateGroup.class) TrainerRequestDTO trainerDTO,
+                                        BindingResult bindingResult,
+                                        UriComponentsBuilder uriComponentsBuilder,
+                                        HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Trainer newTrainer = modelMapper.map(trainerDTO, Trainer.class);
         newTrainer.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
@@ -102,23 +93,13 @@ public final class TrainerController {
                                               BindingResult bindingResult,
                                               HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Optional<Trainer> trainerOpt = trainerService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
         Optional<TrainerResponseDTO> trainerResponseDTOOpt = trainerOpt.map(
                 value -> modelMapper.map(value, TrainerResponseDTO.class));
 
-        FormattingTuple logMessage = trainerResponseDTOOpt.isPresent()
-                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
-                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
-        LOGGER.info(logMessage.getMessage());
-
+        LOGGER.info(getLogMessage(txID, trainerResponseDTOOpt));
         return ResponseEntity.of(trainerResponseDTOOpt);
     }
 
@@ -135,13 +116,7 @@ public final class TrainerController {
                                          BindingResult bindingResult,
                                          HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         Trainer trainerToUpdate = modelMapper.map(trainerDTO, Trainer.class);
         trainerToUpdate.setId(id);
@@ -150,15 +125,11 @@ public final class TrainerController {
         Optional<Trainer> updatedTrainerOpt = trainerService.update(txID, trainerToUpdate,
                 trainerDTO.getUsername(), trainerDTO.getPassword());
 
-        Optional<TrainerResponseDTO> updatedTrainerResponseDTO = updatedTrainerOpt.map(
+        Optional<TrainerResponseDTO> updatedTrainerResponseDTOOpt = updatedTrainerOpt.map(
                 value -> modelMapper.map(value, TrainerResponseDTO.class));
 
-        FormattingTuple logMessage = updatedTrainerResponseDTO.isPresent()
-                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
-                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
-        LOGGER.info(logMessage.getMessage());
-
-        return ResponseEntity.of(updatedTrainerResponseDTO);
+        LOGGER.info(getLogMessage(txID, updatedTrainerResponseDTOOpt));
+        return ResponseEntity.of(updatedTrainerResponseDTOOpt);
     }
 
     @PatchMapping("/{id}/activate")
@@ -174,19 +145,12 @@ public final class TrainerController {
                                       BindingResult bindingResult,
                                       HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         trainerService.changeActivationStatus(txID, id, trainerDTO.getIsActive(),
                 trainerDTO.getUsername(), trainerDTO.getPassword());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok().build();
     }
 
@@ -203,13 +167,7 @@ public final class TrainerController {
                                                      BindingResult bindingResult,
                                                      HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-
-        if (bindingResult.hasErrors()) {
-            Map<String, String> errors = buildErrorMessage(bindingResult);
-            LOGGER.warn(LOG_MESSAGE_WITH_ERRORS, txID, HttpStatus.UNPROCESSABLE_ENTITY, errors);
-
-            return ResponseEntity.unprocessableEntity().body(errors);
-        }
+        validatePayload(txID, bindingResult);
 
         List<Training> trainings = trainerService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
@@ -219,16 +177,21 @@ public final class TrainerController {
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-
         return ResponseEntity.ok().body(responseDTO);
     }
 
-    private Map<String, String> buildErrorMessage(BindingResult bindingResult) {
-        Map<String, String> errors = new HashMap<>();
+    private void validatePayload(String txID, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            List<String> errors = bindingResult.getFieldErrors().stream()
+                    .map(error -> error.getField() + " - " + error.getDefaultMessage()).toList();
 
-        bindingResult.getFieldErrors().forEach(error ->
-                errors.put(error.getField(), error.getDefaultMessage()));
+            throw new ValidationException(txID, errors.toString());
+        }
+    }
 
-        return errors;
+    private String getLogMessage(String txID, Optional<?> optional) {
+        return optional.isPresent()
+                ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK).getMessage()
+                : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND).getMessage();
     }
 }
