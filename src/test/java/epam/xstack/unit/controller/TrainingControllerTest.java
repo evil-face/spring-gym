@@ -2,11 +2,13 @@ package epam.xstack.unit.controller;
 
 import epam.xstack.controller.TrainingController;
 import epam.xstack.dto.training.TrainingCreateRequestDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainingService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -77,7 +79,7 @@ class TrainingControllerTest {
     }
 
     @Test
-    void testCreateTraining_ReturnsUnprocessableEntity() {
+    void testCreateTraining_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainingCreateRequestDTO requestDTO = new TrainingCreateRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
@@ -85,11 +87,12 @@ class TrainingControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = trainingController.handleCreateTraining(
-                requestDTO, bindingResult, UriComponentsBuilder.fromUriString("http://localhost:8080"), mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> trainingController.handleCreateTraining(requestDTO, bindingResult,
+                        UriComponentsBuilder.fromUriString("http://localhost:8080"), mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("trainingName").contains("null");
+        assertThat(thrownException.getErrors()).contains("trainingName").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(trainingService);
     }

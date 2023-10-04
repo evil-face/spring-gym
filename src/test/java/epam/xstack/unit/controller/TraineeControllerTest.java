@@ -7,11 +7,13 @@ import epam.xstack.dto.trainee.TraineeResponseDTO;
 import epam.xstack.dto.trainer.TrainerResponseDTO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TraineeService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -81,7 +83,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testCreateTrainee_ReturnsUnprocessableEntity() {
+    void testCreateTrainee_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TraineeRequestDTO requestDTO = new TraineeRequestDTO();
         Trainee createdTrainee = getTestTrainee();
@@ -95,13 +97,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleCreateTrainee(
-                requestDTO, bindingResult, UriComponentsBuilder.fromUriString("http://localhost:8080"), mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleCreateTrainee(requestDTO, bindingResult,
+                        UriComponentsBuilder.fromUriString("http://localhost:8080"), mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getHeaders().getLocation())
-                .isNull();
-        assertThat(response.getBody().toString()).contains("lastName").contains("null");
+        assertThat(thrownException.getErrors()).contains("lastName").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -152,7 +153,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testGetTrainee_ReturnsUnprocessableEntity() {
+    void testGetTrainee_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         AuthDTO authDTO = new AuthDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
@@ -160,10 +161,11 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleGetTrainee(1, authDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleGetTrainee(1, authDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("password").contains("null");
+        assertThat(thrownException.getErrors()).contains("password").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -214,7 +216,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testUpdateTrainee_ReturnsUnprocessableEntity() {
+    void testUpdateTrainee_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TraineeRequestDTO requestDTO = new TraineeRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
@@ -222,11 +224,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleUpdateTrainee(
-                1, requestDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleUpdateTrainee(
+                        1, requestDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("firstName").contains("null");
+        assertThat(thrownException.getErrors()).contains("firstName").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -254,7 +257,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testDeleteTrainee_ReturnsUnprocessableEntity() {
+    void testDeleteTrainee_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         AuthDTO authDTO = new AuthDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
@@ -262,11 +265,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleDeleteTrainee(
-                1, authDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleDeleteTrainee(
+                        1, authDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("username").contains("null");
+        assertThat(thrownException.getErrors()).contains("username").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -291,7 +295,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testChangeActivationStatus_ReturnsUnprocessableEntity() {
+    void testChangeActivationStatus_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TraineeRequestDTO requestDTO = new TraineeRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
@@ -299,11 +303,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleChangeActivationStatus(
-                1, requestDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleChangeActivationStatus(
+                        1, requestDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("isActive").contains("null");
+        assertThat(thrownException.getErrors()).contains("isActive").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -351,7 +356,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testGetUnassignedTrainersForTrainee_ReturnsUnprocessableEntity() {
+    void testGetUnassignedTrainersForTrainee_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         AuthDTO authDTO = new AuthDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
@@ -359,11 +364,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleGetUnassignedTrainersForTrainee(
-                1, authDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleGetUnassignedTrainersForTrainee(
+                        1, authDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("password").contains("null");
+        assertThat(thrownException.getErrors()).contains("password").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -406,7 +412,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void testGetTrainingsWithFiltering_ReturnsUnprocessableEntity() {
+    void testGetTrainingsWithFiltering_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainingGetListRequestDTO requestDTO = new TrainingGetListRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
@@ -414,11 +420,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleGetTrainingsWithFiltering(
-                1, requestDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleGetTrainingsWithFiltering(
+                        1, requestDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("password").contains("null");
+        assertThat(thrownException.getErrors()).contains("password").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
@@ -461,7 +468,7 @@ class TraineeControllerTest {
     }
 
     @Test
-    void UpdateTraineeTrainerList_ReturnsUnprocessableEntity() {
+    void UpdateTraineeTrainerList_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TraineeRequestDTO requestDTO = new TraineeRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
@@ -469,11 +476,12 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = traineeController.handleUpdateTraineeTrainerList(
-                1, requestDTO, bindingResult, mockRequest);
+        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
+                () -> traineeController.handleUpdateTraineeTrainerList(
+                        1, requestDTO, bindingResult, mockRequest));
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("trainers").contains("null");
+        assertThat(thrownException.getErrors()).contains("trainers").contains("null");
+        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(traineeService);
     }
