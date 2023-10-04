@@ -80,13 +80,13 @@ public final class TrainerController {
         newTrainer.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
         Trainer createdTrainer = trainerService.createTrainer(txID, newTrainer);
 
-        AuthDTO response = modelMapper.map(createdTrainer, AuthDTO.class);
+        AuthDTO responseDTO = modelMapper.map(createdTrainer, AuthDTO.class);
         URI location = uriComponentsBuilder
                 .path("/api/v1/trainers/{trainerId}")
                 .build(createdTrainer.getId());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(responseDTO);
     }
 
     @GetMapping("/{id}")
@@ -111,15 +111,15 @@ public final class TrainerController {
         }
 
         Optional<Trainer> trainerOpt = trainerService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
-        Optional<TrainerResponseDTO> trainer = trainerOpt.map(
+        Optional<TrainerResponseDTO> trainerResponseDTOOpt = trainerOpt.map(
                 value -> modelMapper.map(value, TrainerResponseDTO.class));
 
-        FormattingTuple logMessage = trainer.isPresent()
+        FormattingTuple logMessage = trainerResponseDTOOpt.isPresent()
                 ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
                 : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
         LOGGER.info(logMessage.getMessage());
 
-        return ResponseEntity.of(trainer);
+        return ResponseEntity.of(trainerResponseDTOOpt);
     }
 
     @PutMapping("/{id}")
@@ -214,13 +214,13 @@ public final class TrainerController {
         List<Training> trainings = trainerService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
 
-        List<TrainingResponseDTO> response = trainings.stream()
+        List<TrainingResponseDTO> responseDTO = trainings.stream()
                 .map(e -> modelMapper.map(e, TrainingResponseDTO.class))
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     private Map<String, String> buildErrorMessage(BindingResult bindingResult) {

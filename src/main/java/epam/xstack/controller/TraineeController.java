@@ -84,13 +84,13 @@ public final class TraineeController {
         Trainee newTrainee = modelMapper.map(traineeDTO, Trainee.class);
         Trainee createdTrainee = traineeService.createTrainee(txID, newTrainee);
 
-        AuthDTO response = modelMapper.map(createdTrainee, AuthDTO.class);
+        AuthDTO responseDTO = modelMapper.map(createdTrainee, AuthDTO.class);
         URI location = uriComponentsBuilder
                 .path("/api/v1/trainees/{traineeId}")
                 .build(createdTrainee.getId());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-        return ResponseEntity.created(location).body(response);
+        return ResponseEntity.created(location).body(responseDTO);
     }
 
     @GetMapping("/{id}")
@@ -115,15 +115,15 @@ public final class TraineeController {
         }
 
         Optional<Trainee> traineeOpt = traineeService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
-        Optional<TraineeResponseDTO> trainee = traineeOpt.map(
+        Optional<TraineeResponseDTO> traineeResponseDTO = traineeOpt.map(
                 value -> modelMapper.map(value, TraineeResponseDTO.class));
 
-        FormattingTuple logMessage = trainee.isPresent()
+        FormattingTuple logMessage = traineeResponseDTO.isPresent()
                 ? MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.OK)
                 : MessageFormatter.format(LOG_MESSAGE, txID, HttpStatus.NOT_FOUND);
         LOGGER.info(logMessage.getMessage());
 
-        return ResponseEntity.of(trainee);
+        return ResponseEntity.of(traineeResponseDTO);
     }
 
     @PutMapping("/{id}")
@@ -248,13 +248,13 @@ public final class TraineeController {
         List<Trainer> trainers = traineeService.getPotentialTrainersForTrainee(
                 txID, id, authDTO.getUsername(), authDTO.getPassword());
 
-        List<TrainerResponseDTO> response = trainers.stream()
+        List<TrainerResponseDTO> responseDTO = trainers.stream()
                 .map(e -> modelMapper.map(e, TrainerResponseDTO.class))
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     @GetMapping("/{id}/trainings")
@@ -281,13 +281,13 @@ public final class TraineeController {
         List<Training> trainings = traineeService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
                 requestDTO.getPassword(), requestDTO);
 
-        List<TrainingResponseDTO> response = trainings.stream()
+        List<TrainingResponseDTO> responseDTO = trainings.stream()
                 .map(e -> modelMapper.map(e, TrainingResponseDTO.class))
                 .toList();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok().body(responseDTO);
     }
 
     @PutMapping("/{id}/trainers")
@@ -311,6 +311,7 @@ public final class TraineeController {
 
         List<Trainer> updatedTrainersList = traineeService.updateTrainerList(txID, id, traineeDTO);
 
+        //todo refactor mapping to service layer
         Set<TrainerResponseDTO> responseDTO = updatedTrainersList.stream()
                 .map(trainer -> modelMapper.map(trainer, TrainerResponseDTO.class))
                 .collect(Collectors.toSet());
