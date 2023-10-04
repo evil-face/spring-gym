@@ -52,10 +52,9 @@ public class UserDAO {
     @Transactional
     public boolean updatePassword(String txID, String username, String newPassword) {
         Session session = sessionFactory.getCurrentSession();
-        User user = null;
 
         try {
-            user = session.createQuery(
+            User user = session.createQuery(
                             "SELECT u FROM User u WHERE username = :username", User.class)
                     .setParameter("username", username)
                     .getSingleResult();
