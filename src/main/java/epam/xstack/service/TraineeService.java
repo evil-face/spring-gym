@@ -125,8 +125,11 @@ public final class TraineeService {
             List<Trainer> allTrainers = trainerService.findAll();
             Set<Trainer> assignedTrainers = traineeOpt.get().getTrainers();
             allTrainers.removeAll(assignedTrainers);
+            allTrainers.forEach(trainer -> trainer.setTrainees(null));
 
-            return allTrainers.stream().filter(Trainer::getIsActive).toList();
+            return allTrainers.stream()
+                    .filter(Trainer::getIsActive)
+                    .toList();
         }
 
         return new ArrayList<>();
