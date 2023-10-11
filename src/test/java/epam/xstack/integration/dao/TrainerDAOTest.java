@@ -1,6 +1,5 @@
 package epam.xstack.integration.dao;
 
-import epam.xstack.config.TestConfig;
 import epam.xstack.dao.TrainerDAO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
@@ -10,19 +9,15 @@ import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
+import javax.persistence.EntityManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,33 +25,30 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@SpringJUnitConfig(TestConfig.class)
-@WebAppConfiguration
+@SpringBootTest
+@TestPropertySource(properties = {"spring.sql.init.mode=always"})
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TrainerDAOTest {
+final class TrainerDAOTest {
     @Autowired
     TrainerDAO trainerDAO;
-    @Autowired
-    private DataSource dataSource;
-    @Autowired
-    private SessionFactory sessionFactory;
-    private static final String TX_ID = "12345";
 
-    @BeforeAll
-    void initDatabase() {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("init.sql"));
-        populator.execute(dataSource);
+    @Autowired
+    private EntityManager entityManager;
+
+    private Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
+
+    private static final String TX_ID = "12345";
 
     @Test
     void testSave() {
         Trainer expected = getTestTrainer();
         trainerDAO.save(TX_ID, expected);
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer actual = session.get(Trainer.class, expected.getId());
 
         assertThat(actual).isEqualTo(expected);
@@ -71,7 +63,7 @@ class TrainerDAOTest {
 
     @Test
     void testFindByIdSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee actualTrainee = session.get(Trainee.class, 1L);
 
         Optional<Trainer> actual = trainerDAO.findById(TX_ID, 6);
@@ -91,7 +83,7 @@ class TrainerDAOTest {
 
     @Test
     void testFindByUsernameSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee actualTrainee = session.get(Trainee.class, 1L);
 
         Optional<Trainer> actual = trainerDAO.findByUsername(TX_ID, "trainer1");
@@ -112,7 +104,7 @@ class TrainerDAOTest {
 
     @Test
     void testUpdateSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer beforeUpdate = getTestTrainerForUpdate();
         beforeUpdate.setUsername("updated.username");
         beforeUpdate.setSpecialization(new TrainingType(3, "Yoga"));
@@ -138,7 +130,7 @@ class TrainerDAOTest {
 
     @Test
     void testChangeActivationStatusSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer beforeUpdate = getTestTrainerForUpdate();
 
         trainerDAO.changeActivationStatus(TX_ID, beforeUpdate.getId(), false, beforeUpdate.getUsername());
@@ -252,7 +244,7 @@ class TrainerDAOTest {
     }
 
     private Trainer getTestTrainerForUpdate() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         return session.get(Trainer.class, 7L);
     }
 }

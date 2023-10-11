@@ -1,6 +1,5 @@
 package epam.xstack.integration.dao;
 
-import epam.xstack.config.TestConfig;
 import epam.xstack.dao.TraineeDAO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.EntityNotFoundException;
@@ -10,19 +9,15 @@ import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
+import javax.persistence.EntityManager;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,33 +26,30 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-@SpringJUnitConfig(TestConfig.class)
-@WebAppConfiguration
+@SpringBootTest
+@TestPropertySource(properties = {"spring.sql.init.mode=always"})
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TraineeDAOTest {
+final class TraineeDAOTest {
     @Autowired
     TraineeDAO traineeDAO;
-    @Autowired
-    private DataSource dataSource;
-    @Autowired
-    private SessionFactory sessionFactory;
-    private static final String TX_ID = "12345";
 
-    @BeforeAll
-    void initDatabase() {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("init.sql"));
-        populator.execute(dataSource);
+    @Autowired
+    private EntityManager entityManager;
+
+    private Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
+
+    private static final String TX_ID = "12345";
 
     @Test
     void testSave() {
         Trainee expected = getTestTrainee();
         traineeDAO.save(TX_ID, expected);
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee actual = session.get(Trainee.class, expected.getId());
 
         assertThat(actual).isEqualTo(expected);
@@ -65,7 +57,7 @@ class TraineeDAOTest {
 
     @Test
     void testFindByIdSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer actualTrainer = session.get(Trainer.class, 7L);
 
         Optional<Trainee> actual = traineeDAO.findById(TX_ID,2);
@@ -85,7 +77,7 @@ class TraineeDAOTest {
 
     @Test
     void testFindByUsernameSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer actualTrainer = session.get(Trainer.class, 7L);
 
         Optional<Trainee> actual = traineeDAO.findByUsername(TX_ID,"bob");
@@ -106,7 +98,7 @@ class TraineeDAOTest {
 
     @Test
     void testUpdateSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee beforeUpdate = getTestTraineeForUpdate();
         beforeUpdate.setUsername("charlie.brown");
         beforeUpdate.setAddress("999 Oak St");
@@ -132,7 +124,7 @@ class TraineeDAOTest {
 
     @Test
     void testDeleteSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee trainee = getTestTraineeForDeletion();
 
         traineeDAO.save(TX_ID, trainee);
@@ -146,7 +138,6 @@ class TraineeDAOTest {
 
     @Test
     void testDeleteNotExist() {
-        Session session = sessionFactory.getCurrentSession();
         Trainee trainee = getTestTraineeForDeletion();
         trainee.setId(100);
 
@@ -156,7 +147,7 @@ class TraineeDAOTest {
 
     @Test
     void testChangeActivationStatusSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee beforeUpdate = getTestTraineeForUpdate();
 
         traineeDAO.changeActivationStatus(TX_ID, beforeUpdate.getId(), false, beforeUpdate.getUsername());
@@ -268,7 +259,7 @@ class TraineeDAOTest {
 
     @Test
     void testUpdateTrainerListSuccess() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee trainee = session.get(Trainee.class, 2L);
         Set<Trainer> trainerListBeforeUpdate = trainee.getTrainers();
         List<Trainer> trainerListForUpdate = getTrainerListForUpdate();
@@ -305,12 +296,12 @@ class TraineeDAOTest {
     }
 
     private Trainee getTestTraineeForUpdate() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         return session.get(Trainee.class, 3L);
     }
 
     private List<Trainer> getTrainerListForUpdate() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer trainer1 = session.get(Trainer.class, 9L);
         Trainer trainer2 = session.get(Trainer.class, 10L);
 

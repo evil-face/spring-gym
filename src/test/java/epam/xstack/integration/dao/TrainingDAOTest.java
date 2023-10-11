@@ -1,6 +1,5 @@
 package epam.xstack.integration.dao;
 
-import epam.xstack.config.TestConfig;
 import epam.xstack.dao.TrainingDAO;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
@@ -8,50 +7,43 @@ import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.sql.DataSource;
+import javax.persistence.EntityManager;
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringJUnitConfig(TestConfig.class)
-@WebAppConfiguration
+@SpringBootTest
+@TestPropertySource(properties = {"spring.sql.init.mode=always"})
 @AutoConfigureEmbeddedDatabase(refresh = AutoConfigureEmbeddedDatabase.RefreshMode.AFTER_CLASS)
 @Transactional
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TrainingDAOTest {
+final class TrainingDAOTest {
     @Autowired
     TrainingDAO trainingDAO;
-    @Autowired
-    private DataSource dataSource;
-    @Autowired
-    private SessionFactory sessionFactory;
-    private static final String TX_ID = "12345";
 
-    @BeforeAll
-    void initDatabase() {
-        ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScript(new ClassPathResource("init.sql"));
-        populator.execute(dataSource);
+    @Autowired
+    private EntityManager entityManager;
+
+    private Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
+
+    private static final String TX_ID = "12345";
 
     @Test
     void testSave() {
         Training expected = getTestTraining();
         trainingDAO.save(TX_ID, expected);
 
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Training actual = session.get(Training.class, expected.getId());
 
         assertThat(actual).isEqualTo(expected);
@@ -67,7 +59,7 @@ class TrainingDAOTest {
     }
 
     private Training getTestTraining() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee trainee = session.get(Trainee.class, 5L);
         Trainer trainer = session.get(Trainer.class, 9L);
 
