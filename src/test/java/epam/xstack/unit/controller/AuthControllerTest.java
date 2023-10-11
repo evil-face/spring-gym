@@ -3,8 +3,10 @@ package epam.xstack.unit.controller;
 import epam.xstack.controller.AuthController;
 import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.auth.PasswordChangeRequestDTO;
+import epam.xstack.exception.ValidationException;
 import epam.xstack.model.User;
 import epam.xstack.service.AuthenticationService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -61,10 +63,9 @@ public class AuthControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("username").contains("null");
+        Assertions.assertThrows(ValidationException.class, () -> {
+            authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
+        });
 
         verifyNoInteractions(authService, modelMapper);
     }
@@ -113,11 +114,9 @@ public class AuthControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
-        ResponseEntity<?> response = authController.handleChangePassword(
-                1L, requestDTO, bindingResult, mockRequest);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
-        assertThat(response.getBody().toString()).contains("newPassword").contains("null");
+        Assertions.assertThrows(ValidationException.class, () -> {
+            authController.handleChangePassword(1L, requestDTO, bindingResult, mockRequest);
+        });
 
         verifyNoInteractions(authService, modelMapper);
     }
