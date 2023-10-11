@@ -3,29 +3,31 @@ package epam.xstack.dao;
 import epam.xstack.model.User;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @Transactional(readOnly = true)
 public class UserDAO {
-    private final SessionFactory sessionFactory;
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAO.class);
-    @Autowired
-    public UserDAO(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    @PersistenceContext
+    EntityManager entityManager;
+
+    protected Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserDAO.class);
+
     public List<String> findUsernameOccurencies(String newUsername) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         return session.createQuery(
                 "SELECT username FROM User u WHERE username LIKE :username", String.class)
@@ -34,7 +36,7 @@ public class UserDAO {
     }
 
     public Optional<User> findByUsername(String txID, String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         User user = null;
 
         try {
@@ -51,7 +53,7 @@ public class UserDAO {
 
     @Transactional
     public boolean updatePassword(String txID, String username, String newPassword) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         try {
             User user = session.createQuery(

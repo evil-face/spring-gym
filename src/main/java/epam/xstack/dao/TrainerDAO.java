@@ -8,15 +8,15 @@ import epam.xstack.model.TrainingType;
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -27,27 +27,28 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @Transactional(readOnly = true)
 public class TrainerDAO {
-    private final SessionFactory sessionFactory;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TrainerDAO.class);
+    @PersistenceContext
+    EntityManager entityManager;
 
-    @Autowired
-    public TrainerDAO(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    protected Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TrainerDAO.class);
 
     @Transactional
     public void save(String txID, Trainer trainer) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         session.persist(trainer);
         LOGGER.info("TX ID: {} — Successfully saved new trainer with username '{}' and id '{}'",
                 txID, trainer.getUsername(), trainer.getId());
     }
 
     public List<Trainer> findAll() {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         CriteriaBuilder cb = session.getCriteriaBuilder();
         CriteriaQuery<Trainer> cr = cb.createQuery(Trainer.class);
@@ -58,7 +59,7 @@ public class TrainerDAO {
     }
 
     public Optional<Trainer> findById(String txID, long id) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         Trainer trainer = session.get(Trainer.class, id);
 
@@ -72,7 +73,7 @@ public class TrainerDAO {
     }
 
     public Optional<Trainer> findByUsername(String txID, String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer trainer = null;
 
         try {
@@ -95,7 +96,7 @@ public class TrainerDAO {
 
     @Transactional
     public Optional<Trainer> update(String txID, Trainer updatedTrainer) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer existingTrainer = session.get(Trainer.class, updatedTrainer.getId());
 
         if (existingTrainer == null) {
@@ -115,7 +116,7 @@ public class TrainerDAO {
 
     @Transactional
     public void changeActivationStatus(String txID, long id, Boolean newStatus, String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainer trainer = session.get(Trainer.class, id);
 
         if (trainer == null) {
@@ -132,7 +133,7 @@ public class TrainerDAO {
     }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, TrainingGetListRequestDTO criteria) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         Trainer trainer = session.get(Trainer.class, id);
 
@@ -146,29 +147,8 @@ public class TrainerDAO {
         return query.getResultList();
     }
 
-//    public List<Training> getTrainingsByTrainerUsername(String trainerUsername) {
-//        Session session = sessionFactory.getCurrentSession();
-//        Trainer trainer = null;
-//
-//        try {
-//            trainer = session.createQuery(
-//                            "SELECT t FROM Trainer t WHERE username = :username", Trainer.class)
-//                    .setParameter("username", trainerUsername)
-//                    .getSingleResult();
-//
-//            if (trainer != null) {
-//                Hibernate.initialize(trainer.getTrainingList());
-//                return trainer.getTrainingList();
-//            }
-//        } catch (NonUniqueResultException | NoResultException e) {
-//            LOGGER.warn("Either no trainers or several trainers were found for username {}", trainerUsername);
-//        }
-//
-//        return new ArrayList<>();
-//    }
-
     public List<Trainer> findAllByUsernamePartialMatch(String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         return session.createQuery(
                         "SELECT t FROM Trainer t WHERE username LIKE :username", Trainer.class)
@@ -177,7 +157,7 @@ public class TrainerDAO {
     }
 
     public Optional<TrainingType> trainingTypeExistsById(long id) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         return Optional.ofNullable(session.get(TrainingType.class, id));
     }

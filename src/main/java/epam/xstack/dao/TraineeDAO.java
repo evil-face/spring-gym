@@ -9,15 +9,15 @@ import epam.xstack.model.Training;
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
@@ -29,34 +29,29 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+@Repository
 @Transactional(readOnly = true)
 public class TraineeDAO {
-    private final SessionFactory sessionFactory;
-    private static final Logger LOGGER = LoggerFactory.getLogger(TraineeDAO.class);
+    @PersistenceContext
+    EntityManager entityManager;
 
-    @Autowired
-    public TraineeDAO(SessionFactory sessionFactory) {
-        this.sessionFactory = sessionFactory;
+    protected Session getCurrentSession()  {
+        return entityManager.unwrap(Session.class);
     }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(TraineeDAO.class);
 
     @Transactional
     public void save(String txID, Trainee trainee) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         session.persist(trainee);
+
         LOGGER.info("TX ID: {} — Successfully saved new trainee with username '{}' and id '{}'",
                 txID, trainee.getUsername(), trainee.getId());
     }
 
-//    public List<Trainee> findAll() {
-//        Session session = sessionFactory.getCurrentSession();
-//
-//        return session.createQuery("from Trainee t", Trainee.class)
-//                .getResultList();
-//    }
-
     public Optional<Trainee> findById(String txID, long id) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         Trainee trainee = session.get(Trainee.class, id);
 
@@ -70,7 +65,7 @@ public class TraineeDAO {
     }
 
     public Optional<Trainee> findByUsername(String txID, String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee trainee = null;
 
         try {
@@ -93,7 +88,7 @@ public class TraineeDAO {
 
     @Transactional
     public Optional<Trainee> update(String txID, Trainee updatedTrainee) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee existingTrainee = session.get(Trainee.class, updatedTrainee.getId());
 
         if (existingTrainee == null) {
@@ -113,7 +108,7 @@ public class TraineeDAO {
 
     @Transactional
     public void delete(String txID, Trainee traineeToDelete) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee existingTrainee = session.get(Trainee.class, traineeToDelete.getId());
 
         if (existingTrainee == null) {
@@ -131,7 +126,7 @@ public class TraineeDAO {
 
     @Transactional
     public void changeActivationStatus(String txID, long id, Boolean newStatus, String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
         Trainee trainee = session.get(Trainee.class, id);
 
         if (trainee == null) {
@@ -148,7 +143,7 @@ public class TraineeDAO {
     }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, TrainingGetListRequestDTO criteria) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         Trainee trainee = session.get(Trainee.class, id);
 
@@ -162,29 +157,8 @@ public class TraineeDAO {
         return query.getResultList();
     }
 
-//    public List<Training> getTrainingsByTraineeUsername(String traineeUsername) {
-//        Session session = sessionFactory.getCurrentSession();
-//        Trainee trainee = null;
-//
-//        try {
-//            trainee = session.createQuery(
-//                            "SELECT t FROM Trainee t WHERE username = :username", Trainee.class)
-//                    .setParameter("username", traineeUsername)
-//                    .getSingleResult();
-//
-//            if (trainee != null) {
-//                Hibernate.initialize(trainee.getTrainingList());
-//                return trainee.getTrainingList();
-//            }
-//        } catch (NonUniqueResultException | NoResultException e) {
-//            LOGGER.warn("Either no trainees or several trainees were found for username {}", traineeUsername);
-//        }
-//
-//        return new ArrayList<>();
-//    }
-
     public List<Trainee> findAllByUsernamePartialMatch(String username) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         return session.createQuery(
                         "SELECT t FROM Trainee t WHERE username LIKE :username", Trainee.class)
@@ -194,7 +168,7 @@ public class TraineeDAO {
 
     @Transactional
     public List<Trainer> updateTrainerList(String txID, long id, String username, List<Trainer> updatedList) {
-        Session session = sessionFactory.getCurrentSession();
+        Session session = getCurrentSession();
 
         Trainee trainee = session.get(Trainee.class, id);
 
