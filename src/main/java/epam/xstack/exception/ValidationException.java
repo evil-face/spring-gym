@@ -1,6 +1,6 @@
 package epam.xstack.exception;
 
-public class ValidationException extends RuntimeException {
+public final class ValidationException extends RuntimeException {
     private final String errors;
 
     public ValidationException(String txID, String errors) {

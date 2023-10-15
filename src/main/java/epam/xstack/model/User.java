@@ -93,9 +93,6 @@ public class User {
         isActive = active;
     }
 
-    /**
-     * Override this in child.
-     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -113,9 +110,6 @@ public class User {
                 && Objects.equals(password, user.password);
     }
 
-    /**
-     * Override this in child.
-     */
     @Override
     public int hashCode() {
         return Objects.hash(id, firstName, lastName, username, password, isActive);
