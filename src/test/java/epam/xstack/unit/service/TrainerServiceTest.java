@@ -1,23 +1,28 @@
 package epam.xstack.unit.service;
 
-import epam.xstack.dao.TrainerDAO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
+import epam.xstack.exception.UnauthorizedException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 
+import epam.xstack.repository.TrainerRepository;
+import epam.xstack.repository.TrainingRepository;
+import epam.xstack.repository.TrainingTypeRepository;
 import epam.xstack.service.AuthenticationService;
 import epam.xstack.service.TrainerService;
 import epam.xstack.service.UserService;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -27,19 +32,25 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.atLeastOnce;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerServiceTest {
     @InjectMocks
     TrainerService trainerService;
     @Mock
-    TrainerDAO trainerDAO;
+    TrainerRepository trainerRepository;
+    @Mock
+    TrainingRepository trainingRepository;
+    @Mock
+    TrainingTypeRepository trainingTypeRepository;
     @Mock
     UserService userService;
     @Mock
     AuthenticationService authService;
+    @Mock
+    MeterRegistry meterRegistry;
 
     private static final String TX_ID = "12345";
 
@@ -51,14 +62,14 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequest.getFirstName(), createRequest.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainerDAO.trainingTypeExistsById(createRequest.getSpecialization().getId()))
+        when(trainingTypeRepository.findById(createRequest.getSpecialization().getId()))
                 .thenReturn(Optional.of(createRequest.getSpecialization()));
-        when(trainerDAO.findAllByUsernamePartialMatch(expected.getUsername())).thenReturn(Collections.emptyList());
-        doNothing().when(trainerDAO).save(anyString(), any(Trainer.class));
+        when(trainerRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(Collections.emptyList());
 
         Trainer actual = trainerService.createTrainer(TX_ID, createRequest);
 
         assertThat(actual).isEqualTo(expected);
+        verify(trainerRepository, atLeastOnce()).save(createRequest);
     }
 
     @Test
@@ -69,12 +80,13 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequest.getFirstName(), createRequest.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainerDAO.trainingTypeExistsById(createRequest.getSpecialization().getId()))
+        when(trainingTypeRepository.findById(createRequest.getSpecialization().getId()))
                 .thenReturn(Optional.of(createRequest.getSpecialization()));
-        when(trainerDAO.findAllByUsernamePartialMatch(expected.getUsername())).thenReturn(List.of(expected));
+        when(trainerRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(List.of(expected));
 
         Assertions.assertThrows(PersonAlreadyRegisteredException.class,
                 () -> trainerService.createTrainer(TX_ID, createRequest));
+        verifyNoMoreInteractions(trainerRepository);
     }
 
     @Test
@@ -85,7 +97,7 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequest.getFirstName(), createRequest.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainerDAO.trainingTypeExistsById(createRequest.getSpecialization().getId()))
+        when(trainingTypeRepository.findById(createRequest.getSpecialization().getId()))
                 .thenReturn(Optional.empty());
 
         Assertions.assertThrows(NoSuchTrainingTypeException.class,
@@ -97,60 +109,62 @@ class TrainerServiceTest {
         Trainer expected = getTestTrainer();
 
         when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(trainerDAO.findById(anyString(), anyLong())).thenReturn(Optional.of(expected));
+        when(trainerRepository.findById(anyLong())).thenReturn(Optional.of(expected));
 
         Optional<Trainer> actual = trainerService.findById(TX_ID, 1, "test", "test");
 
-        assertThat(actual).isPresent();
-        assertThat(actual).contains(expected);
+        assertThat(actual).isPresent().contains(expected);
         assertThat(actual.get().getUsername()).isNull();
     }
 
     @Test
     void testFindByIdBadCredentials() {
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(false);
+        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString()))
+                .thenThrow(UnauthorizedException.class);
 
-        Optional<Trainer> actual = trainerService.findById(TX_ID, 1, "test", "test");
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> trainerService.findById(TX_ID, 1, "test", "test"));
 
-        assertThat(actual).isEmpty();
+        verifyNoMoreInteractions(trainerRepository);
     }
 
     @Test
     void testUpdateSuccess() {
-        Trainer expected = getTestTrainer();
+        Trainer initial = getTestTrainer();
+        Trainer updated = getUpdatedTrainer();
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(trainerDAO.trainingTypeExistsById(expected.getSpecialization().getId()))
-                .thenReturn(Optional.of(expected.getSpecialization()));
-        when(trainerDAO.update(anyString(), any(Trainer.class))).thenReturn(Optional.of(expected));
+        when(authService.authenticate(anyString(), anyLong(), any(), any())).thenReturn(true);
+        when(trainingTypeRepository.findById(initial.getSpecialization().getId()))
+                .thenReturn(Optional.of(initial.getSpecialization()));
+        when(trainerRepository.findById(anyLong())).thenReturn(Optional.of(initial));
 
-        Optional<Trainer> actual = trainerService.update(TX_ID, expected, "test", "test");
+        Optional<Trainer> actual = trainerService.update(TX_ID, updated);
 
-        assertThat(actual).isPresent();
-        assertThat(actual).contains(expected);
+        assertThat(actual).isPresent().contains(updated);
         assertThat(actual.get().getUsername()).isNotNull();
+        verify(trainerRepository, atLeastOnce()).save(updated);
     }
 
     @Test
     void testUpdateNoSuchSpecialization() {
         Trainer expected = getTestTrainer();
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(trainerDAO.trainingTypeExistsById(expected.getSpecialization().getId()))
+        when(authService.authenticate(anyString(), anyLong(), any(), any())).thenReturn(true);
+        when(trainingTypeRepository.findById(expected.getSpecialization().getId()))
                 .thenReturn(Optional.empty());
 
         Assertions.assertThrows(NoSuchTrainingTypeException.class,
-                () -> trainerService.update(TX_ID, expected, "test", "test"));
+                () -> trainerService.update(TX_ID, expected));
     }
 
     @Test
     void testUpdateBadCredentials() {
-        Trainer expected = getTestTrainer();
+        when(authService.authenticate(anyString(), anyLong(), any(), any())).thenThrow(UnauthorizedException.class);
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(false);
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> trainerService.update(TX_ID, new Trainer()));
 
-        Optional<Trainer> actual = trainerService.update(TX_ID, expected, "test", "test");
-        assertThat(actual).isEmpty();
+        verifyNoMoreInteractions(trainerRepository);
     }
 
 
@@ -158,9 +172,10 @@ class TrainerServiceTest {
     void testGetTrainingsWithFilteringNoFilters() {
         TrainingGetListRequestDTO request = getEmptyFiltersRequest();
         List<Training> expectedList = getTestTrainings();
+        expectedList.forEach(training -> training.setTrainer(null));
 
         when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(trainerDAO.getTrainingsWithFiltering(TX_ID, 1, request)).thenReturn(expectedList);
+        when(trainingRepository.findAll(any(Specification.class))).thenReturn(expectedList);
 
         List<Training> actualList = trainerService.getTrainingsWithFiltering(
                 TX_ID, 1, "test", "test", request);
@@ -175,12 +190,14 @@ class TrainerServiceTest {
     void testGetTrainingsWithFilteringNoFiltersBadCredentials() {
         TrainingGetListRequestDTO request = getEmptyFiltersRequest();
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(false);
+        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString()))
+                .thenThrow(UnauthorizedException.class);
 
-        List<Training> actualList = trainerService.getTrainingsWithFiltering(
-                TX_ID, 1, "test", "test", request);
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> trainerService.getTrainingsWithFiltering(
+                        TX_ID, 1, "test", "test", request));
 
-        assertThat(actualList).isEmpty();
+        verifyNoMoreInteractions(trainingRepository);
     }
 
     private Trainer getCreateRequest() {
@@ -197,6 +214,12 @@ class TrainerServiceTest {
     private Trainer getTestTrainer() {
         return new Trainer("Miguel", "Rodriguez",
                 "miguel.rodriguez", "qwerty", true,
+                getTestTrainingType());
+    }
+
+    private Trainer getUpdatedTrainer() {
+        return new Trainer("MiguelUPD", "RodriguezUPD",
+                "miguel.rodriguez", "qwerty", false,
                 getTestTrainingType());
     }
 

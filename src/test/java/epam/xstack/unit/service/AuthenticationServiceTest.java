@@ -24,20 +24,21 @@ class AuthenticationServiceTest {
     AuthenticationService authService;
     @Mock
     UserService userService;
+
     private static final String TX_ID = "12345";
     public static final String USERNAME = "test.test";
     private static final String CORRECT_PASSWORD = "qwerty";
 
     @Test
     void testAuthenticateSuccess() {
-        when(userService.findByUsername(TX_ID, USERNAME)).thenReturn(Optional.of(getMockUser()));
+        when(userService.findByUsername(USERNAME)).thenReturn(Optional.of(getMockUser()));
 
         assertThat(authService.authenticate(TX_ID, 1, USERNAME, CORRECT_PASSWORD)).isTrue();
     }
 
     @Test
     void testAuthenticateNoSuchUser() {
-        when(userService.findByUsername(TX_ID, USERNAME)).thenReturn(Optional.empty());
+        when(userService.findByUsername(USERNAME)).thenReturn(Optional.empty());
 
         Assertions.assertThrows(UnauthorizedException.class,
                 () -> authService.authenticate(TX_ID, 1, USERNAME, CORRECT_PASSWORD));
@@ -45,7 +46,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testAuthenticateWrongPassword() {
-        when(userService.findByUsername(TX_ID, USERNAME)).thenReturn(Optional.of(getMockUser()));
+        when(userService.findByUsername(USERNAME)).thenReturn(Optional.of(getMockUser()));
 
         Assertions.assertThrows(UnauthorizedException.class,
                 () -> authService.authenticate(TX_ID, 1, USERNAME, "wrong_password"));
@@ -53,7 +54,7 @@ class AuthenticationServiceTest {
 
     @Test
     void testAuthenticateWrongIdAccess() {
-        when(userService.findByUsername(TX_ID, USERNAME)).thenReturn(Optional.of(getMockUser()));
+        when(userService.findByUsername(USERNAME)).thenReturn(Optional.of(getMockUser()));
 
         Assertions.assertThrows(ForbiddenException.class,
                 () -> authService.authenticate(TX_ID, 100, USERNAME, CORRECT_PASSWORD));

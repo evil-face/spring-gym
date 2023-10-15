@@ -50,6 +50,7 @@ class TraineeControllerTest {
     TraineeService traineeService;
     @Mock
     ModelMapper modelMapper;
+
     private static final String TX_ID = "12345";
 
     @Test
@@ -180,7 +181,7 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
         when(modelMapper.map(requestDTO, Trainee.class)).thenReturn(new Trainee());
-        when(traineeService.update(anyString(), any(Trainee.class), any(), any()))
+        when(traineeService.update(anyString(), any(Trainee.class)))
                 .thenReturn(Optional.of(updatedTrainee));
         when(modelMapper.map(updatedTrainee, TraineeResponseDTO.class)).thenReturn(expectedDTO);
 
@@ -190,7 +191,7 @@ class TraineeControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedDTO);
 
-        verify(traineeService).update(anyString(), any(Trainee.class), any(), any());
+        verify(traineeService).update(anyString(), any(Trainee.class));
         verifyNoMoreInteractions(traineeService);
     }
 
@@ -202,7 +203,7 @@ class TraineeControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
         when(modelMapper.map(requestDTO, Trainee.class)).thenReturn(new Trainee());
-        when(traineeService.update(anyString(), any(Trainee.class), any(), any()))
+        when(traineeService.update(anyString(), any(Trainee.class)))
                 .thenReturn(Optional.empty());
 
         ResponseEntity<?> response = traineeController.handleUpdateTrainee(
@@ -211,7 +212,7 @@ class TraineeControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNull();
 
-        verify(traineeService).update(anyString(), any(Trainee.class), any(), any());
+        verify(traineeService).update(anyString(), any(Trainee.class));
         verifyNoMoreInteractions(traineeService);
     }
 

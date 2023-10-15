@@ -32,6 +32,7 @@ public class AuthControllerTest {
     AuthenticationService authService;
     @Mock
     private ModelMapper modelMapper;
+
     private static final String TX_ID = "12345";
     public static final String USERNAME = "test.test";
     private static final String CORRECT_PASSWORD = "qwerty";
