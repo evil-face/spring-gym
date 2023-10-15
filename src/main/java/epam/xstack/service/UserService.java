@@ -1,8 +1,10 @@
 package epam.xstack.service;
 
-import epam.xstack.dao.UserDAO;
 import epam.xstack.model.User;
+import epam.xstack.repository.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,12 +15,14 @@ import java.util.OptionalInt;
 
 @Service
 public final class UserService {
-    private final UserDAO userDAO;
+    private final UserRepository userRepository;
+
     private static final int PASSWORD_LENGTH = 10;
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-    public UserService(UserDAO userDAO) {
-        this.userDAO = userDAO;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
     }
 
     public String generateUsername(String firstName, String lastName) {
@@ -27,8 +31,9 @@ public final class UserService {
             String clearedLastName = clearString(lastName);
             String newUsername = clearedFirstName + "." + clearedLastName;
 
-            List<String> usernames = userDAO.findUsernameOccurencies(newUsername);
+            List<User> usernames = userRepository.findByUsernameStartingWith(newUsername);
             OptionalInt max = usernames.stream()
+                    .map(User::getUsername)
                     .map(s -> s.replace(newUsername, ""))
                     .mapToInt(s -> s.isEmpty() ? 0 : Integer.parseInt(s))
                     .max();
@@ -44,11 +49,23 @@ public final class UserService {
     }
 
     public boolean updatePassword(String txID, String username, String newPassword) {
-        return userDAO.updatePassword(txID, username, newPassword);
+        Optional<User> userOpt = userRepository.findByUsername(username);
+
+        if (userOpt.isEmpty()) {
+            LOGGER.warn("TX ID: {} — No trainees were found for username {}", txID, username);
+            return false;
+        } else {
+            User user = userOpt.get();
+            user.setPassword(newPassword);
+            userRepository.save(user);
+
+            LOGGER.info("TX ID: {} — Successfully updated password of trainee with username {}", txID, username);
+            return true;
+        }
     }
 
-    public Optional<User> findByUsername(String txID, String username) {
-        return userDAO.findByUsername(txID, username);
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     private static String clearString(String s) {

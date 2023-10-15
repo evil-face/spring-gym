@@ -42,6 +42,11 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
 <!--        Non-boot-->
 
         <dependency>
@@ -71,7 +76,7 @@
             <version>3.0.0</version>
         </dependency>
 
-        <!--        Testing-->
+<!--        Testing-->
 
         <dependency>
             <groupId>org.mockito</groupId>
@@ -92,6 +97,13 @@
             <artifactId>embedded-database-spring-test</artifactId>
             <version>2.3.0</version>
             <scope>test</scope>
+        </dependency>
+
+<!--        Monitoring-->
+
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
 
     </dependencies>

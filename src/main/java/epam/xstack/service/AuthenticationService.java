@@ -22,7 +22,7 @@ public final class AuthenticationService {
     }
 
     public boolean authenticate(String txID, long id, String username, String password) {
-        Optional<User> user = userService.findByUsername(txID, username);
+        Optional<User> user = userService.findByUsername(username);
 
         if (user.isEmpty()) {
             LOGGER.warn("TX ID: {} — No user was found to authenticate with username {}", txID, username);
@@ -46,10 +46,8 @@ public final class AuthenticationService {
     }
 
     public boolean updatePassword(String txID, long id, PasswordChangeRequestDTO requestDTO) {
-        if (authenticate(txID, id, requestDTO.getUsername(), requestDTO.getOldPassword())) {
-            return userService.updatePassword(txID, requestDTO.getUsername(), requestDTO.getNewPassword());
-        }
+        authenticate(txID, id, requestDTO.getUsername(), requestDTO.getOldPassword());
 
-        return false;
+        return userService.updatePassword(txID, requestDTO.getUsername(), requestDTO.getNewPassword());
     }
 }
