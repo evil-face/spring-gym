@@ -12,8 +12,8 @@ import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.repository.TrainerRepository;
-import epam.xstack.repository.TrainingRepository;
 import epam.xstack.repository.TrainingTypeRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.modelmapper.ModelMapper;
@@ -144,18 +144,42 @@ public class TrainerService {
         LOGGER.info("TX ID: {} — Successfully changed status for trainer with id '{}' to '{}'", txID, id, newStatus);
     }
 
-    public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
-                                                    TrainingGetListRequestDTO requestDTO) {
-        authService.authenticate(txID, id, username, password);
+    @CircuitBreaker(name = "trainerservice", fallbackMethod = "updateTrainerWorkloadFallback")
+    public void updateTrainerWorkload(String txID, Training training, Action action) {
+        Trainer trainer = training.getTrainer();
 
-        List<Training> trainings = trainingRepository.findAll(where(trainerHasId(id))
-                .and(traineeHasUsername(requestDTO.getTraineeName()))
-                .and(hasPeriodFrom(requestDTO.getPeriodFrom()))
-                .and(hasPeriodTo(requestDTO.getPeriodTo())));
+        TrainerWorkloadRequestDTO requestDTO = new TrainerWorkloadRequestDTO(
+                trainer.getUsername(),
+                trainer.getFirstName(),
+                trainer.getLastName(),
+                trainer.getActive(),
+                training.getTrainingDate(),
+                training.getTrainingDuration(),
+                action
+        );
 
-        trainings.forEach(training -> training.setTrainer(null));
+        String url = "http://trainer-workload-service/api/v1/trainerworkload";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.add("txID", txID);
+        headers.setBearerAuth(extractJWT(txID));
 
-        return trainings;
+        HttpEntity<TrainerWorkloadRequestDTO> request = new HttpEntity<>(requestDTO, headers);
+        restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        LOGGER.info("TX ID: {} — Sent a '{}' request to 'trainer-workload' microservice for '{}' trainer",
+                txID, action, trainer.getUsername());
+    }
+
+    public void updateTrainerWorkloadFallback(String txID, Training training,
+                                              Action action, RuntimeException e) {
+        Trainer trainer = training.getTrainer();
+        LocalDate trainingDate = training.getTrainingDate();
+
+        LOGGER.warn("TX ID: {} — Circuit breaker engaged: Couldn't send a '{}' request to 'trainer-workload' " +
+                        "microservice for '{}' trainer. Consider adding workload manually later: {}.{}, {} minutes",
+                txID, action, trainer.getUsername(),
+                trainingDate.getMonth(), trainingDate.getYear(), training.getTrainingDuration());
     }
 
     private void checkIfNotRegisteredYet(String txID, Trainer newTrainer) {
