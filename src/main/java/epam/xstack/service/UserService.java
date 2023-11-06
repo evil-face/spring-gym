@@ -1,12 +1,21 @@
 package epam.xstack.service;
 
+import epam.xstack.dto.auth.AuthDTO;
+import epam.xstack.dto.auth.PasswordChangeRequestDTO;
+import epam.xstack.exception.UnauthorizedException;
 import epam.xstack.model.User;
 import epam.xstack.repository.UserRepository;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,15 +23,22 @@ import java.util.OptionalInt;
 
 
 @Service
-public final class UserService {
+public class UserService {
+    private final TokenService tokenService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authManager;
 
     private static final int PASSWORD_LENGTH = 10;
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(TokenService tokenService, UserRepository userRepository,
+                       PasswordEncoder passwordEncoder, AuthenticationManager authManager) {
+        this.tokenService = tokenService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.authManager = authManager;
     }
 
     public String generateUsername(String firstName, String lastName) {
@@ -48,7 +64,10 @@ public final class UserService {
         return RandomStringUtils.randomAlphanumeric(PASSWORD_LENGTH);
     }
 
-    public boolean updatePassword(String txID, String username, String newPassword) {
+    @Transactional
+    public boolean updatePassword(String txID, PasswordChangeRequestDTO requestDTO) {
+        String username = requestDTO.getUsername();
+        String newPassword = requestDTO.getNewPassword();
         Optional<User> userOpt = userRepository.findByUsername(username);
 
         if (userOpt.isEmpty()) {
@@ -56,7 +75,7 @@ public final class UserService {
             return false;
         } else {
             User user = userOpt.get();
-            user.setPassword(newPassword);
+            user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);
 
             LOGGER.info("TX ID: {} — Successfully updated password of trainee with username {}", txID, username);
@@ -64,8 +83,22 @@ public final class UserService {
         }
     }
 
-    public Optional<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+    public String loginAndGenerateToken(String txID, AuthDTO authDTO) {
+        String username = authDTO.getUsername();
+        String password = authDTO.getPassword();
+
+        UsernamePasswordAuthenticationToken authInputToken =
+                new UsernamePasswordAuthenticationToken(username, password);
+
+        try {
+            Authentication authentication = authManager.authenticate(authInputToken);
+            String jwtToken = tokenService.generateToken(authentication);
+            LOGGER.info("TX ID: {} — New token granted successfully for username '{}'", txID, username);
+
+            return jwtToken;
+        } catch (BadCredentialsException e) {
+            throw new UnauthorizedException(txID);
+        }
     }
 
     private static String clearString(String s) {

@@ -1,6 +1,11 @@
 package epam.xstack.service;
 
-import epam.xstack.dto.training.TrainingGetListRequestDTO;
+import epam.xstack.dto.auth.AuthDTO;
+import epam.xstack.dto.trainer.TrainerRequestDTO;
+import epam.xstack.dto.trainer.TrainerResponseDTO;
+import epam.xstack.dto.workload.Action;
+import epam.xstack.dto.workload.TrainerWorkloadRequestDTO;
+import epam.xstack.exception.NoSuchTrainerExistException;
 import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
@@ -11,94 +16,99 @@ import epam.xstack.repository.TrainingRepository;
 import epam.xstack.repository.TrainingTypeRepository;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-import static epam.xstack.repository.TrainingSpecs.*;
-import static org.springframework.data.jpa.domain.Specification.where;
-
 @Service
-public final class TrainerService {
+public class TrainerService {
     private final TrainerRepository trainerRepository;
-    private final TrainingRepository trainingRepository;
-    private final TrainingTypeRepository trainingTypeRepository;
 
-    private final AuthenticationService authService;
+    private final TrainingTypeRepository trainingTypeRepository;
     private final UserService userService;
 
-    private final MeterRegistry meterRegistry;
-
+    private final ModelMapper modelMapper;
+    private final RestTemplate restTemplate;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, UserService userService,
-                          AuthenticationService authService, TrainingRepository trainingRepository,
-                          TrainingTypeRepository trainingTypeRepository, MeterRegistry meterRegistry) {
+                          MeterRegistry meterRegistry, TrainingTypeRepository trainingTypeRepository,
+                          ModelMapper modelMapper, RestTemplate restTemplate) {
         this.trainerRepository = trainerRepository;
         this.userService = userService;
-        this.authService = authService;
-        this.trainingRepository = trainingRepository;
         this.trainingTypeRepository = trainingTypeRepository;
-        this.meterRegistry = meterRegistry;
+        this.modelMapper = modelMapper;
+        this.restTemplate = restTemplate;
 
         Gauge.builder("custom.trainer.count", trainerRepository, TrainerRepository::count)
                 .register(meterRegistry);
     }
 
-    public Trainer createTrainer(String txID, Trainer newTrainer) {
+    @Transactional
+    public AuthDTO createTrainer(String txID, TrainerRequestDTO trainerDTO) {
+        Trainer newTrainer = modelMapper.map(trainerDTO, Trainer.class);
+
         String username = userService.generateUsername(newTrainer.getFirstName(), newTrainer.getLastName());
         String password = userService.generatePassword();
 
+        newTrainer.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
         newTrainer.setUsername(username);
         newTrainer.setPassword(password);
-        newTrainer.setIsActive(true);
+        newTrainer.setActive(true);
 
-        checkIfSpecializationExists(txID, newTrainer);
+        checkIfSpecializationExists(txID, trainerDTO);
         checkIfNotRegisteredYet(txID, newTrainer);
 
         trainerRepository.save(newTrainer);
 
         LOGGER.info("TX ID: {} — Successfully saved new trainer with username '{}' and id '{}'",
                 txID, newTrainer.getUsername(), newTrainer.getId());
-        return newTrainer;
+        return modelMapper.map(newTrainer, AuthDTO.class);
+    }
+
+    @Transactional
+    public void save(Trainer trainer) {
+        trainerRepository.save(trainer);
     }
 
     public List<Trainer> findAll() {
         return trainerRepository.findAll();
     }
 
-    public Optional<Trainer> findById(String txID, long id, String username, String password) {
-        authService.authenticate(txID, id, username, password);
-
+    public Optional<TrainerResponseDTO> findById(long id) {
         Optional<Trainer> trainerOpt = trainerRepository.findById(id);
         trainerOpt.ifPresent(value -> value.setUsername(null));
 
-        return trainerOpt;
+        return trainerOpt.map(value -> modelMapper.map(value, TrainerResponseDTO.class));
     }
 
-    public Optional<Trainer> findByUsername(String txID, String username) {
-        Optional<Trainer> trainerOpt = trainerRepository.findByUsername(username);
-
-        if (trainerOpt.isEmpty()) {
-            LOGGER.warn("TX ID: {} — No trainer records found for username {}", txID, username);
-        }
-
-        return trainerOpt;
+    public Optional<Trainer> findByUsername(String username) {
+        return trainerRepository.findByUsername(username);
     }
 
-    public Optional<Trainer> update(String txID, Trainer updatedTrainer) {
-        authService.authenticate(txID, updatedTrainer.getId(),
-                updatedTrainer.getUsername(), updatedTrainer.getPassword());
+    @Transactional
+    public Optional<TrainerResponseDTO> update(String txID, long id, TrainerRequestDTO trainerDTO) {
+        Trainer updatedTrainer = modelMapper.map(trainerDTO, Trainer.class);
+        updatedTrainer.setId(id);
+        updatedTrainer.setSpecialization(checkIfSpecializationExists(txID, trainerDTO));
 
-        TrainingType confirmedTrainingType = checkIfSpecializationExists(txID, updatedTrainer);
-        updatedTrainer.setSpecialization(confirmedTrainingType);
-
-        return trainerRepository.findById(updatedTrainer.getId())
+        Optional<Trainer> trainerOpt = trainerRepository.findById(updatedTrainer.getId())
                 .map(trainer -> {
                     updateFields(trainer, updatedTrainer);
                     trainerRepository.save(trainer);
@@ -108,17 +118,30 @@ public final class TrainerService {
 
                     return trainer;
                 });
+
+        return trainerOpt.map(value -> modelMapper.map(value, TrainerResponseDTO.class));
     }
 
-    public void changeActivationStatus(String txID, long id, Boolean newStatus, String username, String password) {
-        authService.authenticate(txID, id, username, password);
+    public List<Trainer> getVerifiedTrainersByUsernameList(String txID, List<String> trainerUsernames) {
+        List<Trainer> verifiedList = findAll().stream()
+                .filter(trainer -> trainerUsernames.contains(trainer.getUsername()))
+                .toList();
+
+        if (verifiedList.isEmpty()) {
+            throw new NoSuchTrainerExistException(txID);
+        }
+
+        return verifiedList;
+    }
+
+    @Transactional
+    public void changeActivationStatus(String txID, long id, Boolean newStatus) {
 
         Trainer trainer = trainerRepository.getReferenceById(id);
-        trainer.setIsActive(newStatus);
+        trainer.setActive(newStatus);
         trainerRepository.save(trainer);
 
-        LOGGER.info("TX ID: {} — Successfully changed status for trainer with username '{}' and id '{}' to '{}'",
-                txID, username, id, newStatus);
+        LOGGER.info("TX ID: {} — Successfully changed status for trainer with id '{}' to '{}'", txID, id, newStatus);
     }
 
     public List<Training> getTrainingsWithFiltering(String txID, long id, String username, String password,
@@ -140,15 +163,15 @@ public final class TrainerService {
                 newTrainer.getUsername().replaceAll("\\d", ""));
 
         for (Trainer trainer : candidates) {
-            if (newTrainer.getSpecialization().getId() == trainer.getSpecialization().getId()) {
+            if (newTrainer.getSpecialization().getId().equals(trainer.getSpecialization().getId())) {
                 throw new PersonAlreadyRegisteredException(txID);
             }
         }
     }
 
-    private TrainingType checkIfSpecializationExists(String txID, Trainer trainer) {
+    private TrainingType checkIfSpecializationExists(String txID, TrainerRequestDTO trainer) {
         Optional<TrainingType> trainingTypeOpt = trainingTypeRepository.findById(
-                trainer.getSpecialization().getId());
+                trainer.getSpecialization());
 
         if (trainingTypeOpt.isEmpty()) {
             throw new NoSuchTrainingTypeException(txID);
@@ -161,6 +184,17 @@ public final class TrainerService {
         existingTrainer.setFirstName(updatedTrainer.getFirstName());
         existingTrainer.setLastName(updatedTrainer.getLastName());
         existingTrainer.setSpecialization(updatedTrainer.getSpecialization());
-        existingTrainer.setIsActive(updatedTrainer.getIsActive());
+        existingTrainer.setActive(updatedTrainer.getActive());
+    }
+
+    private String extractJWT(String txID) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken().getTokenValue();
+        } else {
+            LOGGER.warn("TX ID: {} — No JWT found in authentication", txID);
+            return null;
+        }
     }
 }

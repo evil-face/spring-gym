@@ -41,13 +41,13 @@ public final class TrainingController {
     @Operation(summary = "Get all existing training types",
         responses = {
             @ApiResponse(responseCode = "200", description = "Training types list retrieved successfully")})
-    public ResponseEntity<List<TrainingType>> handleGetAllTrainingTypes(HttpServletRequest httpServletRequest) {
+    public List<TrainingType> handleGetAllTrainingTypes(HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
         List<TrainingType> response = trainingService.findAllTrainingTypes();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
-        return ResponseEntity.ok().body(response);
+        return response;
     }
 
     @PostMapping(consumes = {"application/JSON"})

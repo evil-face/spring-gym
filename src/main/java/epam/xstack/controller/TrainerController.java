@@ -9,13 +9,10 @@ import epam.xstack.dto.trainer.validationgroup.TrainerUpdateGroup;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
 import epam.xstack.exception.ValidationException;
-import epam.xstack.model.Trainer;
-import epam.xstack.model.Training;
-import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainerService;
+import epam.xstack.service.TrainingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.MessageFormatter;
@@ -44,14 +41,14 @@ import java.util.Optional;
 @RequestMapping(value = "/api/v1/trainers", consumes = {"application/JSON"}, produces = {"application/JSON"})
 public final class TrainerController {
     private final TrainerService trainerService;
-    private final ModelMapper modelMapper;
+    private final TrainingService trainingService;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerController.class);
     private static final String LOG_MESSAGE = "TX ID: {} — {}";
 
     @Autowired
-    public TrainerController(TrainerService trainerService, ModelMapper modelMapper) {
+    public TrainerController(TrainerService trainerService, TrainingService trainingService) {
         this.trainerService = trainerService;
-        this.modelMapper = modelMapper;
+        this.trainingService = trainingService;
     }
 
     @PostMapping
@@ -67,14 +64,10 @@ public final class TrainerController {
         String txID = (String) httpServletRequest.getAttribute("txID");
         validatePayload(txID, bindingResult);
 
-        Trainer newTrainer = modelMapper.map(trainerDTO, Trainer.class);
-        newTrainer.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
-        Trainer createdTrainer = trainerService.createTrainer(txID, newTrainer);
-
-        AuthDTO responseDTO = modelMapper.map(createdTrainer, AuthDTO.class);
+        AuthDTO responseDTO = trainerService.createTrainer(txID, trainerDTO);
         URI location = uriComponentsBuilder
                 .path("/api/v1/trainers/{trainerId}")
-                .build(createdTrainer.getId());
+                .build(responseDTO.getId());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.created(location).body(responseDTO);
@@ -88,16 +81,10 @@ public final class TrainerController {
             @ApiResponse(responseCode = "403", description = "Access denied (wrong ID?)"),
             @ApiResponse(responseCode = "404", description = "Trainer not found"),
             @ApiResponse(responseCode = "422", description = "Username or password is null")})
-    public ResponseEntity<?> handleGetTrainer(@PathVariable("id") long id,
-                                              @RequestBody @Valid AuthDTO authDTO,
-                                              BindingResult bindingResult,
-                                              HttpServletRequest httpServletRequest) {
+    public ResponseEntity<?> handleGetTrainer(@PathVariable("id") long id, HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-        validatePayload(txID, bindingResult);
 
-        Optional<Trainer> trainerOpt = trainerService.findById(txID, id, authDTO.getUsername(), authDTO.getPassword());
-        Optional<TrainerResponseDTO> trainerResponseDTOOpt = trainerOpt.map(
-                value -> modelMapper.map(value, TrainerResponseDTO.class));
+        Optional<TrainerResponseDTO> trainerResponseDTOOpt = trainerService.findById(id);
 
         LOGGER.info(getLogMessage(txID, trainerResponseDTOOpt));
         return ResponseEntity.of(trainerResponseDTOOpt);
@@ -118,14 +105,7 @@ public final class TrainerController {
         String txID = (String) httpServletRequest.getAttribute("txID");
         validatePayload(txID, bindingResult);
 
-        Trainer trainerToUpdate = modelMapper.map(trainerDTO, Trainer.class);
-        trainerToUpdate.setId(id);
-        trainerToUpdate.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
-
-        Optional<Trainer> updatedTrainerOpt = trainerService.update(txID, trainerToUpdate);
-
-        Optional<TrainerResponseDTO> updatedTrainerResponseDTOOpt = updatedTrainerOpt.map(
-                value -> modelMapper.map(value, TrainerResponseDTO.class));
+        Optional<TrainerResponseDTO> updatedTrainerResponseDTOOpt = trainerService.update(txID, id, trainerDTO);
 
         LOGGER.info(getLogMessage(txID, updatedTrainerResponseDTOOpt));
         return ResponseEntity.of(updatedTrainerResponseDTOOpt);
@@ -146,8 +126,7 @@ public final class TrainerController {
         String txID = (String) httpServletRequest.getAttribute("txID");
         validatePayload(txID, bindingResult);
 
-        trainerService.changeActivationStatus(txID, id, trainerDTO.getIsActive(),
-                trainerDTO.getUsername(), trainerDTO.getPassword());
+        trainerService.changeActivationStatus(txID, id, trainerDTO.getActive());
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.ok().build();
@@ -168,12 +147,7 @@ public final class TrainerController {
         String txID = (String) httpServletRequest.getAttribute("txID");
         validatePayload(txID, bindingResult);
 
-        List<Training> trainings = trainerService.getTrainingsWithFiltering(txID, id, requestDTO.getUsername(),
-                requestDTO.getPassword(), requestDTO);
-
-        List<TrainingResponseDTO> responseDTO = trainings.stream()
-                .map(e -> modelMapper.map(e, TrainingResponseDTO.class))
-                .toList();
+        List<TrainingResponseDTO> responseDTO = trainingService.getTrainerTrainingsWithFiltering(id, requestDTO);
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.ok().body(responseDTO);
