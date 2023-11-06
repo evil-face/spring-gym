@@ -1,5 +1,8 @@
 package epam.xstack.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.model.Trainee;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
@@ -18,6 +21,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -43,10 +48,12 @@ final class TraineeControllerITest {
     @LocalServerPort
     private int port;
     private String baseUrl;
+    private String jwtToken;
 
     @BeforeAll
-    void setup() {
+    void setup() throws URISyntaxException, JsonProcessingException {
         baseUrl = "http://localhost:" + port;
+        jwtToken = getJwtToken();
     }
 
     @Test
@@ -55,7 +62,8 @@ final class TraineeControllerITest {
         String lastName = "Posh";
         String dateOfBirth = "2002-03-04";
         String address = "London, Duke st. 3";
-        String expectedUsername = firstName.toLowerCase().concat(".").concat(lastName.toLowerCase());
+        String expectedUsername = "jason.posh";
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
         // payload
         HttpHeaders headers = new HttpHeaders();
@@ -84,13 +92,13 @@ final class TraineeControllerITest {
                     response.getHeaders().getLocation().getPath()
                             .replace("/api/v1/trainees/", ""));
 
-            Trainee trainee = session.get(Trainee.class, id);
-            assertThat(trainee.getUsername()).isEqualTo(expectedUsername);
-            assertThat(trainee.getPassword()).isEqualTo(response.getBody().getPassword());
-            assertThat(trainee.getFirstName()).isEqualTo(firstName);
-            assertThat(trainee.getLastName()).isEqualTo(lastName);
-            assertThat(trainee.getDateOfBirth()).isEqualTo(dateOfBirth);
-            assertThat(trainee.getAddress()).isEqualTo(address);
+            Trainee actual = session.get(Trainee.class, id);
+            assertThat(actual.getUsername()).isEqualTo(expectedUsername);
+            assertThat(passwordEncoder.matches(response.getBody().getPassword(), actual.getPassword())).isTrue();
+            assertThat(actual.getFirstName()).isEqualTo(firstName);
+            assertThat(actual.getLastName()).isEqualTo(lastName);
+            assertThat(actual.getDateOfBirth()).isEqualTo(dateOfBirth);
+            assertThat(actual.getAddress()).isEqualTo(address);
         }
     }
 
@@ -122,22 +130,23 @@ final class TraineeControllerITest {
     void testUpdateTrainee_ReturnsUpdatedTraineeResponseEntity() throws URISyntaxException {
         String expectedFirstName = "BobUPD";
         String expectedLastName = "SmithUPD";
-        String expectedIsActive = "false";
+        String expectedActive = "false";
         String expectedAddress = "456 Elm St UPD";
         String expectedDoB = "1986-06-21";
         Trainee expectedTrainee = new Trainee(expectedFirstName, expectedLastName, "bob", "password2",
-                Boolean.parseBoolean(expectedIsActive), LocalDate.parse(expectedDoB), expectedAddress);
+                Boolean.parseBoolean(expectedActive), LocalDate.parse(expectedDoB), expectedAddress);
 
         // payload
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
 
         Map<String, String> jsonMap = Map.of(
                 "username", "bob",
                 "password", "password2",
                 "firstName", expectedFirstName,
                 "lastName", expectedLastName,
-                "isActive", expectedIsActive,
+                "active", expectedActive,
                 "address", expectedAddress,
                 "dateOfBirth", expectedDoB);
         HttpEntity<Map<String, String>> request = new HttpEntity<>(jsonMap, headers);
@@ -163,8 +172,30 @@ final class TraineeControllerITest {
     private void areFieldsEqual(Trainee actual, Trainee expected) {
         assertThat(actual.getFirstName()).isEqualTo(expected.getFirstName());
         assertThat(actual.getLastName()).isEqualTo(expected.getLastName());
-        assertThat(actual.getIsActive()).isEqualTo(expected.getIsActive());
+        assertThat(actual.getActive()).isEqualTo(expected.getActive());
         assertThat(actual.getAddress()).isEqualTo(expected.getAddress());
         assertThat(actual.getDateOfBirth()).isEqualTo(expected.getDateOfBirth());
+    }
+
+    private String getJwtToken() throws URISyntaxException, JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> jsonMap = Map.of(
+                "username", "bob",
+                "password", "password2");
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(jsonMap, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                new URI(baseUrl + "/api/v1/auth"), HttpMethod.POST, request, String.class);
+
+        String responseBody = responseEntity.getBody();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> responseMap =
+                objectMapper.readValue(responseBody, new TypeReference<Map<String, String>>() {});
+
+        return responseMap.get("jwt-token");
     }
 }
