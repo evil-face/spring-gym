@@ -9,16 +9,15 @@ import epam.xstack.dto.training.TrainingResponseDTO;
 import epam.xstack.exception.ValidationException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
-import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.service.TrainerService;
+import epam.xstack.service.TrainingService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,17 +37,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerControllerTest {
     @InjectMocks
     TrainerController trainerController;
+
     @Mock
     TrainerService trainerService;
+
     @Mock
-    ModelMapper modelMapper;
+    TrainingService trainingService;
 
     private static final String TX_ID = "12345";
 
@@ -61,14 +61,12 @@ class TrainerControllerTest {
         AuthDTO responseDTO = new AuthDTO();
         responseDTO.setUsername(createdTrainer.getUsername());
         responseDTO.setPassword(createdTrainer.getPassword());
+        responseDTO.setId(createdTrainer.getId());
 
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(requestDTO, Trainer.class)).thenReturn(new Trainer());
-        when(trainerService.createTrainer(anyString(), any(Trainer.class))).thenReturn(createdTrainer);
-        when(modelMapper.map(createdTrainer, AuthDTO.class)).thenReturn(responseDTO);
-
+        when(trainerService.createTrainer(anyString(), any(TrainerRequestDTO.class))).thenReturn(responseDTO);
 
         ResponseEntity<?> response = trainerController.handleCreateTrainer(
                 requestDTO, bindingResult, UriComponentsBuilder.fromUriString("http://localhost:8080"), mockRequest);
@@ -78,7 +76,7 @@ class TrainerControllerTest {
                 .isEqualTo(URI.create("http://localhost:8080/api/v1/trainers/" + createdTrainer.getId()));
         assertThat(response.getBody()).isEqualTo(responseDTO);
 
-        verify(trainerService).createTrainer(anyString(), any(Trainer.class));
+        verify(trainerService).createTrainer(anyString(), any(TrainerRequestDTO.class));
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -86,11 +84,6 @@ class TrainerControllerTest {
     void testCreateTrainer_ThrowsValidationException() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainerRequestDTO requestDTO = new TrainerRequestDTO();
-        Trainer createdTrainer = getTestTrainer();
-
-        AuthDTO responseDTO = new AuthDTO();
-        responseDTO.setUsername(createdTrainer.getUsername());
-        responseDTO.setPassword(createdTrainer.getPassword());
 
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
         bindingResult.rejectValue("lastName", "Error message");
@@ -111,62 +104,33 @@ class TrainerControllerTest {
     void testGetTrainer_ReturnsOkResponseEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         Trainer foundTrainer = getTestTrainer();
-        AuthDTO authDTO = new AuthDTO();
-        authDTO.setUsername(foundTrainer.getUsername());
-        authDTO.setPassword(foundTrainer.getPassword());
-        BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
         TrainerResponseDTO expectedDTO = getTestTrainerResponseDTO(foundTrainer);
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(trainerService.findById(TX_ID, foundTrainer.getId(), authDTO.getUsername(), authDTO.getPassword()))
-                .thenReturn(Optional.of(foundTrainer));
-        when(modelMapper.map(any(), any())).thenReturn(expectedDTO);
+        when(trainerService.findById(foundTrainer.getId())).thenReturn(Optional.of(expectedDTO));
 
-        ResponseEntity<?> response = trainerController.handleGetTrainer(
-                foundTrainer.getId(), authDTO, bindingResult, mockRequest);
+        ResponseEntity<?> response = trainerController.handleGetTrainer(foundTrainer.getId(), mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedDTO);
 
-        verify(trainerService).findById(TX_ID, foundTrainer.getId(), authDTO.getUsername(), authDTO.getPassword());
+        verify(trainerService).findById(foundTrainer.getId());
         verifyNoMoreInteractions(trainerService);
     }
 
     @Test
     void testGetTrainer_ReturnsNotFoundEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        AuthDTO authDTO = new AuthDTO();
-        BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(trainerService.findById(anyString(), anyLong(), any(), any()))
-                .thenReturn(Optional.empty());
+        when(trainerService.findById(anyLong())).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = trainerController.handleGetTrainer(
-                1, authDTO, bindingResult, mockRequest);
+        ResponseEntity<?> response = trainerController.handleGetTrainer(1, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNull();
 
-        verify(trainerService).findById(anyString(), anyLong(), any(), any());
-        verifyNoMoreInteractions(trainerService);
-    }
-
-    @Test
-    void testGetTrainer_ThrowsValidationException() {
-        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        AuthDTO authDTO = new AuthDTO();
-        BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
-        bindingResult.rejectValue("password", "Error message");
-
-        when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-
-        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
-                () -> trainerController.handleGetTrainer(1, authDTO, bindingResult, mockRequest));
-
-        assertThat(thrownException.getErrors()).contains("password").contains("null");
-        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
-
+        verify(trainerService).findById(anyLong());
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -179,10 +143,8 @@ class TrainerControllerTest {
         TrainerResponseDTO expectedDTO = getTestTrainerResponseDTO(updatedTrainer);
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(requestDTO, Trainer.class)).thenReturn(new Trainer());
-        when(trainerService.update(anyString(), any(Trainer.class)))
-                .thenReturn(Optional.of(updatedTrainer));
-        when(modelMapper.map(updatedTrainer, TrainerResponseDTO.class)).thenReturn(expectedDTO);
+        when(trainerService.update(anyString(), anyLong(), any(TrainerRequestDTO.class)))
+                .thenReturn(Optional.of(expectedDTO));
 
         ResponseEntity<?> response = trainerController.handleUpdateTrainer(
                 1, requestDTO, bindingResult, mockRequest);
@@ -190,7 +152,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedDTO);
 
-        verify(trainerService).update(anyString(), any(Trainer.class));
+        verify(trainerService).update(anyString(), anyLong(), any(TrainerRequestDTO.class));
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -201,8 +163,7 @@ class TrainerControllerTest {
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(requestDTO, Trainer.class)).thenReturn(new Trainer());
-        when(trainerService.update(anyString(), any(Trainer.class)))
+        when(trainerService.update(anyString(), anyLong(), any(TrainerRequestDTO.class)))
                 .thenReturn(Optional.empty());
 
         ResponseEntity<?> response = trainerController.handleUpdateTrainer(
@@ -211,7 +172,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNull();
 
-        verify(trainerService).update(anyString(), any(Trainer.class));
+        verify(trainerService).update(anyString(), anyLong(), any(TrainerRequestDTO.class));
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -238,10 +199,11 @@ class TrainerControllerTest {
     void testChangeActivationStatus_ReturnsOkEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainerRequestDTO requestDTO = new TrainerRequestDTO();
+        requestDTO.setActive(true);
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        doNothing().when(trainerService).changeActivationStatus(anyString(), anyLong(), any(), any(), any());
+        doNothing().when(trainerService).changeActivationStatus(anyString(), anyLong(), anyBoolean());
 
         ResponseEntity<?> response = trainerController.handleChangeActivationStatus(
                 1, requestDTO, bindingResult, mockRequest);
@@ -249,7 +211,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isNull();
 
-        verify(trainerService).changeActivationStatus(anyString(), anyLong(), any(), any(), any());
+        verify(trainerService).changeActivationStatus(anyString(), anyLong(), anyBoolean());
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -258,7 +220,7 @@ class TrainerControllerTest {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainerRequestDTO requestDTO = new TrainerRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
-        bindingResult.rejectValue("isActive", "Error message");
+        bindingResult.rejectValue("active", "Error message");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
@@ -266,7 +228,7 @@ class TrainerControllerTest {
                 () -> trainerController.handleChangeActivationStatus(
                         1, requestDTO, bindingResult, mockRequest));
 
-        assertThat(thrownException.getErrors()).contains("isActive").contains("null");
+        assertThat(thrownException.getErrors()).contains("active").contains("null");
         assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
 
         verifyNoMoreInteractions(trainerService);
@@ -277,25 +239,11 @@ class TrainerControllerTest {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainingGetListRequestDTO requestDTO = new TrainingGetListRequestDTO();
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
-        List<Training> testTrainings = getTestTrainings();
         List<TrainingResponseDTO> expectedList = new ArrayList<>();
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(trainerService.getTrainingsWithFiltering(
-                anyString(), anyLong(), any(), any(), any(TrainingGetListRequestDTO.class)))
-                .thenReturn(testTrainings);
-
-        Answer<TrainingResponseDTO> answer = invocation -> {
-            Training value = invocation.getArgument(0);
-            TrainingResponseDTO result = getTestTrainingResponseDTO(value);
-            expectedList.add(result);
-            return result;
-        };
-
-        when(modelMapper.map(any(Training.class), eq(TrainingResponseDTO.class)))
-                .thenAnswer(answer)
-                .thenAnswer(answer)
-                .thenAnswer(answer);
+        when(trainingService.getTrainerTrainingsWithFiltering(anyLong(), any(TrainingGetListRequestDTO.class)))
+                .thenReturn(expectedList);
 
         ResponseEntity<?> response = trainerController.handleGetTrainingsWithFiltering(
                 1, requestDTO, bindingResult, mockRequest);
@@ -303,28 +251,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedList);
 
-        verify(trainerService).getTrainingsWithFiltering(
-                anyString(), anyLong(), any(), any(), any(TrainingGetListRequestDTO.class));
-        verify(modelMapper, times(3)).map(any(Training.class), eq(TrainingResponseDTO.class));
-        verifyNoMoreInteractions(trainerService);
-    }
-
-    @Test
-    void testGetTrainingsWithFiltering_ThrowsValidationException() {
-        HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        TrainingGetListRequestDTO requestDTO = new TrainingGetListRequestDTO();
-        BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
-        bindingResult.rejectValue("password", "Error message");
-
-        when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-
-        ValidationException thrownException = Assertions.assertThrows(ValidationException.class,
-                () -> trainerController.handleGetTrainingsWithFiltering(
-                        1, requestDTO, bindingResult, mockRequest));
-
-        assertThat(thrownException.getErrors()).contains("password").contains("null");
-        assertThat(thrownException.getMessage()).isEqualTo(TX_ID);
-
+        verify(trainingService).getTrainerTrainingsWithFiltering(anyLong(), any(TrainingGetListRequestDTO.class));
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -342,33 +269,8 @@ class TrainerControllerTest {
         return trainer;
     }
 
-    private List<Training> getTestTrainings() {
-        TrainingType trainingType = new TrainingType(1, "Lifting");
-
-        Trainee trainee = new Trainee("trainee", "trainee",
-                "trainee.trainee", "qwerty", true,
-                LocalDate.of(1980, 2, 16), "traineeCity");
-
-        Trainer trainer = new Trainer("Michael", "Swat",
-                "michael.swat", "12345", true, trainingType);
-
-        return List.of(
-                new Training(trainee, trainer, "First training",
-                        trainingType, LocalDate.of(2023, 10, 3), 100),
-                new Training(trainee, trainer, "Second training",
-                        trainingType, LocalDate.of(2023, 10, 5), 110),
-                new Training(trainee, trainer, "Third training",
-                        trainingType, LocalDate.of(2023, 10, 7), 120)
-        );
-    }
-
     private TrainerResponseDTO getTestTrainerResponseDTO(Trainer trainer) {
         ModelMapper oneTimeMapper = new ModelMapper();
         return oneTimeMapper.map(trainer, TrainerResponseDTO.class);
-    }
-
-    private TrainingResponseDTO getTestTrainingResponseDTO(Training training) {
-        ModelMapper oneTimeMapper = new ModelMapper();
-        return oneTimeMapper.map(training, TrainingResponseDTO.class);
     }
 }
