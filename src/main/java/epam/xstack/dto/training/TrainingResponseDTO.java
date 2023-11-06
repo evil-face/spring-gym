@@ -8,19 +8,24 @@ import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public final class TrainingResponseDTO {
     private String trainingName;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate trainingDate;
+
     private TrainingType trainingType;
+
     private Integer trainingDuration;
-    @JsonIgnoreProperties({"id", "username", "password", "trainingList", "trainees", "isActive", "specialization"})
+
+    @JsonIgnoreProperties({"id", "username", "password", "trainingList", "trainees", "active", "specialization"})
     private Trainer trainer;
 
     @JsonIgnoreProperties({"id", "username", "password", "trainingList", "dateOfBirth", "address",
-        "trainers", "isActive"})
+        "trainers", "active"})
     private Trainee trainee;
 
     public String getTrainingName() {
@@ -69,5 +74,27 @@ public final class TrainingResponseDTO {
 
     public void setTrainee(Trainee trainee) {
         this.trainee = trainee;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TrainingResponseDTO that = (TrainingResponseDTO) o;
+        return Objects.equals(trainingName, that.trainingName)
+                && Objects.equals(trainingDate, that.trainingDate)
+                && Objects.equals(trainingType, that.trainingType)
+                && Objects.equals(trainingDuration, that.trainingDuration)
+                && Objects.equals(trainer, that.trainer)
+                && Objects.equals(trainee, that.trainee);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(trainingName, trainingDate, trainingType, trainingDuration, trainer, trainee);
     }
 }

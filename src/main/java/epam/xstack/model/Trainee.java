@@ -16,13 +16,16 @@ import java.util.Set;
 
 
 @Entity
-public final class Trainee extends User {
+public class Trainee extends User {
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;
+
     @Column
     private String address;
+
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.REMOVE)
     private List<Training> trainingList;
+
     @ManyToMany
     @JoinTable(
             name = "trainee_trainer",

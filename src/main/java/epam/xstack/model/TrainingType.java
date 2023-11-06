@@ -14,11 +14,14 @@ import java.util.Objects;
 public final class TrainingType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
+
     @Column(nullable = false)
     private String trainingTypeName;
+
     @OneToMany(mappedBy = "specialization")
     private List<Trainer> trainerList;
+
     @OneToMany(mappedBy = "trainingType")
     private List<Training> trainingList;
 
@@ -30,11 +33,11 @@ public final class TrainingType {
     public TrainingType() {
     }
 
-    public long getId() {
+    public Long getId() {
         return this.id;
     }
 
-    public void setId(long id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -55,11 +58,14 @@ public final class TrainingType {
             return false;
         }
         TrainingType that = (TrainingType) o;
-        return Objects.equals(id, that.id) && Objects.equals(trainingTypeName, that.trainingTypeName);
+        return Objects.equals(id, that.id)
+                && Objects.equals(trainingTypeName, that.trainingTypeName)
+                && Objects.equals(trainerList, that.trainerList)
+                && Objects.equals(trainingList, that.trainingList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, trainingTypeName);
+        return Objects.hash(id, trainingTypeName, trainerList, trainingList);
     }
 }

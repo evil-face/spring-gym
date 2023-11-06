@@ -16,20 +16,20 @@ import java.util.List;
 @GroupSequence({TraineeRequestDTO.class, TraineeCreateGroup.class, TraineeUpdateGroup.class,
     TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
 public final class TraineeRequestDTO {
-    @NotBlank(message = "Username cannot be empty",
-        groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class, TraineeUpdateTrainerListGroup.class})
-    private String username;
-    @NotBlank(message = "Password cannot be empty", groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class})
-    private String password;
     @NotBlank(message = "First name cannot be empty", groups = {TraineeCreateGroup.class, TraineeUpdateGroup.class})
     private String firstName;
+
     @NotBlank(message = "Last name cannot be empty", groups = {TraineeCreateGroup.class, TraineeUpdateGroup.class})
     private String lastName;
+
     @Past(message = "Date of birth must be in the past", groups = {TraineeCreateGroup.class, TraineeUpdateGroup.class})
     private LocalDate dateOfBirth;
+
     private String address;
+
     @NotNull(groups = {TraineeUpdateGroup.class, TraineeActivateGroup.class})
-    private Boolean isActive;
+    private Boolean active;
+
     @NotEmpty(groups = {TraineeUpdateTrainerListGroup.class})
     private List<String> trainers;
 
@@ -65,28 +65,12 @@ public final class TraineeRequestDTO {
         this.address = address;
     }
 
-    public String getUsername() {
-        return username;
+    public Boolean getActive() {
+        return active;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean active) {
-        isActive = active;
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public List<String> getTrainers() {

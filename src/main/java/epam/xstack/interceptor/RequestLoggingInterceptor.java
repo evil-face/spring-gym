@@ -13,6 +13,7 @@ import java.util.UUID;
 public final class RequestLoggingInterceptor implements HandlerInterceptor {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
     private static final int TX_ID_LENGTH = 8;
+
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String txID = UUID.randomUUID().toString().substring(0, TX_ID_LENGTH);

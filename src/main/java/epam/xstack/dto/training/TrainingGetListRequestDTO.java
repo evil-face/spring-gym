@@ -1,34 +1,13 @@
 package epam.xstack.dto.training;
 
-import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
 
 public final class TrainingGetListRequestDTO {
-    @NotBlank(message = "Username cannot be empty")
-    private String username;
-    @NotBlank(message = "Password cannot be empty")
-    private String password;
     private LocalDate periodFrom;
     private LocalDate periodTo;
     private String trainerName;
     private String traineeName;
     private Long trainingType;
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     public LocalDate getPeriodFrom() {
         return periodFrom;

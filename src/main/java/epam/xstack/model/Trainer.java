@@ -11,13 +11,14 @@ import java.util.Objects;
 import java.util.Set;
 
 @Entity
-public final class Trainer extends User {
-
+public class Trainer extends User {
     @ManyToOne
     @JoinColumn(name = "specialization", referencedColumnName = "id")
     private TrainingType specialization;
+
     @OneToMany(mappedBy = "trainer")
     private List<Training> trainingList;
+
     @ManyToMany(mappedBy = "trainers")
     private Set<Trainee> trainees;
 
