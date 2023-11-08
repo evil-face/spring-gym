@@ -24,6 +24,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -163,12 +164,15 @@ public class TrainerService {
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.add("txID", txID);
         headers.setBearerAuth(extractJWT(txID));
-
         HttpEntity<TrainerWorkloadRequestDTO> request = new HttpEntity<>(requestDTO, headers);
-        restTemplate.exchange(url, HttpMethod.POST, request, String.class);
 
-        LOGGER.info("TX ID: {} — Sent a '{}' request to 'trainer-workload' microservice for '{}' trainer",
+        LOGGER.info("TX ID: {} — Sending a '{}' request to 'trainer-workload' microservice for '{}' trainer...",
                 txID, action, trainer.getUsername());
+
+        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+
+        LOGGER.info("TX ID: {} — Got a response from 'trainer-workload' microservice with status code {}",
+                txID, response.getStatusCode());
     }
 
     public void updateTrainerWorkloadFallback(String txID, Training training,
