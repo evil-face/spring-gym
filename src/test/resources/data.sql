@@ -8,7 +8,7 @@ INSERT INTO TrainingType (trainingTypeName) VALUES
 INSERT INTO User_ (firstName, lastName, username, password, isActive)
 VALUES
     ('Alice', 'Johnson', 'alice', 'password1', true),
-    ('Bob', 'Smith', 'bob', 'password2', true),
+    ('Bob', 'Smith', 'bob', '$2a$10$00ZfGWVMHzo4ob2iWdlOTusXMqzoni5uhqvICNCnbTUSOdXSJXSGO', true),
     ('Charlie', 'Brown', 'charlie', 'password3', true),
     ('David', 'Lee', 'david', 'password4', true),
     ('Eve', 'Davis', 'eve', 'password5', true),

@@ -3,16 +3,16 @@ package epam.xstack.unit.controller;
 import epam.xstack.controller.AuthController;
 import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.auth.PasswordChangeRequestDTO;
+import epam.xstack.exception.UnauthorizedException;
 import epam.xstack.exception.ValidationException;
-import epam.xstack.model.User;
-import epam.xstack.service.AuthenticationService;
+
+import epam.xstack.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -20,39 +20,36 @@ import org.springframework.validation.BindingResult;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.mockito.ArgumentMatchers.*;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class AuthControllerTest {
+class AuthControllerTest {
     @InjectMocks
     AuthController authController;
+
     @Mock
-    AuthenticationService authService;
-    @Mock
-    private ModelMapper modelMapper;
+    UserService userService;
 
     private static final String TX_ID = "12345";
-    public static final String USERNAME = "test.test";
-    private static final String CORRECT_PASSWORD = "qwerty";
 
     @Test
     void testLogin_ReturnsOkResponseEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         AuthDTO authDTO = new AuthDTO();
-        User user = getTestUser();
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
+        String expectedJwtToken = "a1b2bc3";
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(authDTO, User.class)).thenReturn(user);
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
+        when(userService.loginAndGenerateToken(TX_ID, authDTO)).thenReturn(expectedJwtToken);
 
-        ResponseEntity<?> response = authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
+        ResponseEntity<?> response = authController.handleLogin(authDTO, bindingResult, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(authService).authenticate(anyString(), eq(1L), anyString(), anyString());
-        verify(modelMapper).map(authDTO, User.class);
+        assertThat(response.getBody()).isEqualTo(Map.of("jwt-token", expectedJwtToken));
+        verify(userService).loginAndGenerateToken(TX_ID, authDTO);
     }
 
     @Test
@@ -65,28 +62,26 @@ public class AuthControllerTest {
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
         Assertions.assertThrows(ValidationException.class, () -> {
-            authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
+            authController.handleLogin(authDTO, bindingResult, mockRequest);
         });
 
-        verifyNoInteractions(authService, modelMapper);
+        verifyNoInteractions(userService);
     }
 
     @Test
     void testLogin_ReturnsUnauthorizedEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         AuthDTO authDTO = new AuthDTO();
-        User user = getTestUser();
         BindingResult bindingResult = new BeanPropertyBindingResult(authDTO, "authDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(modelMapper.map(authDTO, User.class)).thenReturn(user);
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(false);
+        when(userService.loginAndGenerateToken(TX_ID, authDTO)).thenThrow(new UnauthorizedException(TX_ID));
 
-        ResponseEntity<?> response = authController.handleLogin(1L, authDTO, bindingResult, mockRequest);
+        Assertions.assertThrows(UnauthorizedException.class, () -> {
+            authController.handleLogin(authDTO, bindingResult, mockRequest);
+        });
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
-        verify(authService).authenticate(anyString(), eq(1L), anyString(), anyString());
-        verify(modelMapper).map(authDTO, User.class);
+        verify(userService).loginAndGenerateToken(TX_ID, authDTO);
     }
 
     @Test
@@ -96,14 +91,12 @@ public class AuthControllerTest {
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(authService.updatePassword(anyString(), anyLong(), any(PasswordChangeRequestDTO.class)))
-                .thenReturn(true);
+        when(userService.updatePassword(TX_ID, requestDTO)).thenReturn(true);
 
-        ResponseEntity<?> response = authController.handleChangePassword(
-                1L, requestDTO, bindingResult, mockRequest);
+        ResponseEntity<?> response = authController.handleChangePassword(requestDTO, bindingResult, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        verify(authService).updatePassword(anyString(), eq(1L), any(PasswordChangeRequestDTO.class));
+        verify(userService).updatePassword(TX_ID, requestDTO);
     }
 
     @Test
@@ -116,10 +109,10 @@ public class AuthControllerTest {
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
 
         Assertions.assertThrows(ValidationException.class, () -> {
-            authController.handleChangePassword(1L, requestDTO, bindingResult, mockRequest);
+            authController.handleChangePassword(requestDTO, bindingResult, mockRequest);
         });
 
-        verifyNoInteractions(authService, modelMapper);
+        verifyNoInteractions(userService);
     }
 
     @Test
@@ -129,21 +122,11 @@ public class AuthControllerTest {
         BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(authService.updatePassword(anyString(), anyLong(), any(PasswordChangeRequestDTO.class)))
-                .thenReturn(false);
+        when(userService.updatePassword(TX_ID, requestDTO)).thenReturn(false);
 
-        ResponseEntity<?> response = authController.handleChangePassword(
-                1L, requestDTO, bindingResult, mockRequest);
+        ResponseEntity<?> response = authController.handleChangePassword(requestDTO, bindingResult, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        verify(authService).updatePassword(anyString(), eq(1L), any(PasswordChangeRequestDTO.class));
-    }
-
-    private User getTestUser() {
-        User user = new User();
-        user.setUsername(USERNAME);
-        user.setPassword(CORRECT_PASSWORD);
-
-        return user;
+        verify(userService).updatePassword(TX_ID, requestDTO);
     }
 }

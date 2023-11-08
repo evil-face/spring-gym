@@ -35,6 +35,7 @@ import static org.mockito.Mockito.verify;
 class TrainingControllerTest {
     @InjectMocks
     TrainingController trainingController;
+
     @Mock
     TrainingService trainingService;
 
@@ -52,10 +53,9 @@ class TrainingControllerTest {
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
         when(trainingService.findAllTrainingTypes()).thenReturn(trainingTypeList);
 
-        ResponseEntity<?> response = trainingController.handleGetAllTrainingTypes(mockRequest);
+        List<TrainingType> response = trainingController.handleGetAllTrainingTypes(mockRequest);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(trainingTypeList);
+        assertThat(response).isEqualTo(trainingTypeList);
         verify(trainingService).findAllTrainingTypes();
     }
 

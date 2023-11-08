@@ -1,19 +1,15 @@
 package epam.xstack.unit.service;
 
+import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.trainee.TraineeRequestDTO;
-import epam.xstack.dto.training.TrainingGetListRequestDTO;
-import epam.xstack.exception.EntityNotFoundException;
-import epam.xstack.exception.NoSuchTrainerExistException;
+import epam.xstack.dto.trainee.TraineeResponseDTO;
+import epam.xstack.dto.trainer.TrainerResponseDTO;
+import epam.xstack.exception.NoSuchTraineeExistException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
-import epam.xstack.exception.UnauthorizedException;
 import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
-import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.repository.TraineeRepository;
-import epam.xstack.repository.TrainerRepository;
-import epam.xstack.repository.TrainingRepository;
-import epam.xstack.service.AuthenticationService;
 import epam.xstack.service.TraineeService;
 import epam.xstack.service.TrainerService;
 import epam.xstack.service.UserService;
@@ -23,8 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.jpa.domain.Specification;
+import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -33,57 +31,62 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TraineeServiceTest {
     @InjectMocks
     TraineeService traineeService;
+
     @Mock
     TraineeRepository traineeRepository;
+
     @Mock
-    TrainerRepository trainerRepository;
-    @Mock
-    TrainingRepository trainingRepository;
+    TrainerService trainerService;
+
     @Mock
     UserService userService;
-    @Mock
-    AuthenticationService authService;
+
+    @Spy
+    ModelMapper modelMapper;
+
     @Mock
     MeterRegistry meterRegistry;
+
+    @Mock
+    PasswordEncoder passwordEncoder;
 
     private static final String TX_ID = "12345";
 
     @Test
     void testCreateTraineeSuccess() {
-        Trainee createRequest = getCreateRequest();
+        TraineeRequestDTO createRequestDTO = getCreateRequestDTO();
         Trainee expected = getTestTrainee();
 
-        when(userService.generateUsername(createRequest.getFirstName(), createRequest.getLastName()))
+        when(userService.generateUsername(createRequestDTO.getFirstName(), createRequestDTO.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
         when(traineeRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(Collections.emptyList());
 
-        Trainee actual = traineeService.createTrainee(TX_ID, createRequest);
+        AuthDTO actual = traineeService.createTrainee(TX_ID, createRequestDTO);
 
-        assertThat(actual).isEqualTo(expected);
-        verify(traineeRepository, atLeastOnce()).save(createRequest);
+        assertThat(actual).usingRecursiveComparison().isEqualTo(expected);
+        verify(traineeRepository, atLeastOnce()).save(any(Trainee.class));
     }
 
     @Test
     void testCreateTraineeAlreadyRegistered() {
-        Trainee createRequest = getCreateRequest();
+        TraineeRequestDTO createRequestDTO = getCreateRequestDTO();
         Trainee expected = getTestTrainee();
 
-        when(userService.generateUsername(createRequest.getFirstName(), createRequest.getLastName()))
+        when(userService.generateUsername(createRequestDTO.getFirstName(), createRequestDTO.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
         when(traineeRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(List.of(expected));
 
         Assertions.assertThrows(PersonAlreadyRegisteredException.class,
-                () -> traineeService.createTrainee(TX_ID, createRequest));
+                () -> traineeService.createTrainee(TX_ID, createRequestDTO));
         verifyNoMoreInteractions(traineeRepository);
     }
 
@@ -91,81 +94,32 @@ class TraineeServiceTest {
     void testFindByIdSuccess() {
         Trainee expected = getTestTrainee();
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
         when(traineeRepository.findById(anyLong())).thenReturn(Optional.of(expected));
 
-        Optional<Trainee> actual = traineeService.findById(TX_ID, 1, "test", "test");
+        Optional<TraineeResponseDTO> actual = traineeService.findById(1);
 
-        assertThat(actual).isPresent().contains(expected);
+        assertThat(actual).isPresent();
         assertThat(actual.get().getUsername()).isNull();
-    }
-
-    @Test
-    void testFindByIdBadCredentials() {
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString()))
-                .thenThrow(UnauthorizedException.class);
-
-        Assertions.assertThrows(UnauthorizedException.class,
-                () -> traineeService.findById(TX_ID, 1, "test", "test"));
-
-        verifyNoMoreInteractions(traineeRepository);
+        assertThat(actual.get()).usingRecursiveComparison().ignoringFields("username")
+                .isEqualTo(expected);
     }
 
     @Test
     void testUpdateSuccess() {
         Trainee initial = getTestTrainee();
-        Trainee updated = getUpdatedTrainee();
+        TraineeRequestDTO updateRequestDTO = getUpdateRequestDTO();
 
-        when(authService.authenticate(anyString(), anyLong(), any(), any())).thenReturn(true);
         when(traineeRepository.findById(anyLong())).thenReturn(Optional.of(initial));
 
-        Optional<Trainee> actual = traineeService.update(TX_ID, updated);
+        Optional<TraineeResponseDTO> actual = traineeService.update(TX_ID, 1, updateRequestDTO);
 
-        assertThat(actual).isPresent().contains(updated);
-        assertThat(actual.get().getUsername()).isNotNull();
-        verify(traineeRepository, atLeastOnce()).save(updated);
-    }
+        assertThat(actual).isPresent();
+        assertThat(actual.get())
+                .usingRecursiveComparison()
+                .ignoringFields("username")
+                .isEqualTo(updateRequestDTO);
 
-    @Test
-    void testUpdateBadCredentials() {
-        when(authService.authenticate(anyString(), anyLong(), any(), any())).thenThrow(UnauthorizedException.class);
-
-        Assertions.assertThrows(UnauthorizedException.class,
-                () -> traineeService.update(TX_ID, new Trainee()));
-
-        verifyNoMoreInteractions(traineeRepository);
-    }
-
-    @Test
-    void testGetTrainingsWithFilteringNoFilters() {
-        TrainingGetListRequestDTO request = getEmptyFiltersRequest();
-        List<Training> expectedList = getTestTrainings();
-        expectedList.forEach(training -> training.setTrainee(null));
-
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(trainingRepository.findAll(any(Specification.class))).thenReturn(expectedList);
-
-        List<Training> actualList = traineeService.getTrainingsWithFiltering(
-                TX_ID, 1L, "test", "test", request);
-
-        assertThat(actualList).containsExactlyInAnyOrderElementsOf(expectedList);
-        for (Training training : actualList) {
-            assertThat(training.getTrainee()).isNull();
-        }
-    }
-
-    @Test
-    void testGetTrainingsWithFilteringNoFiltersBadCredentials() {
-        TrainingGetListRequestDTO request = getEmptyFiltersRequest();
-
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString()))
-                .thenThrow(UnauthorizedException.class);
-
-        Assertions.assertThrows(UnauthorizedException.class,
-                () -> traineeService.getTrainingsWithFiltering(
-                        TX_ID, 1, "test", "test", request));
-
-        verifyNoMoreInteractions(trainingRepository);
+        verify(traineeRepository, atLeastOnce()).save(initial);
     }
 
     @Test
@@ -177,35 +131,21 @@ class TraineeServiceTest {
         Trainer initialTrainer = allTrainers.get(0);
         trainee.setTrainers(Set.of(initialTrainer));
 
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(traineeRepository.findByUsername(trainee.getUsername())).thenReturn(Optional.of(trainee));
-        when(trainerRepository.findAll()).thenReturn(allTrainers);
+        when(traineeRepository.findById(anyLong())).thenReturn(Optional.of(trainee));
+        when(trainerService.findAll()).thenReturn(allTrainers);
 
-        List<Trainer> actualList = traineeService.getPotentialTrainersForTrainee(
-                TX_ID, 1, trainee.getUsername(), trainee.getPassword());
+        List<TrainerResponseDTO> actualList = traineeService.getPotentialTrainersForTrainee(TX_ID, 1);
 
-        assertThat(actualList)
-                .hasSizeLessThan(initialSize)
-                .doesNotContain(initialTrainer);
+        assertThat(actualList).hasSizeLessThan(initialSize);
+        actualList.forEach(trainer -> assertThat(trainer.getUsername()).isNotEqualTo(initialTrainer.getUsername()));
     }
 
     @Test
     void testGetPotentialTrainersForTraineeNoSuchTrainee() {
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString())).thenReturn(true);
-        when(traineeRepository.findByUsername(anyString())).thenReturn(Optional.empty());
+        when(traineeRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        Assertions.assertThrows(EntityNotFoundException.class,
-                () -> traineeService.getPotentialTrainersForTrainee(TX_ID, 1, "test", "test"));
-    }
-
-    @Test
-    void testGetPotentialTrainersForTraineeBadCredentials() {
-        when(authService.authenticate(anyString(), anyLong(), anyString(), anyString()))
-                .thenThrow(UnauthorizedException.class);
-
-        Assertions.assertThrows(UnauthorizedException.class, () -> {
-            traineeService.getPotentialTrainersForTrainee(TX_ID, 1, "test", "test");
-        });
+        Assertions.assertThrows(NoSuchTraineeExistException.class,
+                () -> traineeService.getPotentialTrainersForTrainee(TX_ID, 1));
     }
 
     @Test
@@ -213,35 +153,45 @@ class TraineeServiceTest {
         Trainee trainee = getTestTrainee();
         List<Trainer> allTrainers = getAllTestTrainers();
         List<Trainer> updatedTrainersList = List.of(allTrainers.get(0), allTrainers.get(1));
-        List<String> updatedTrainersUsernames = List.of(
-                allTrainers.get(0).getUsername(), allTrainers.get(1).getUsername());
+        List<TrainerResponseDTO> expectedList = updatedTrainersList.stream()
+                .map(trainer -> modelMapper.map(trainer, TrainerResponseDTO.class))
+                .toList();
+        expectedList.forEach(trainer -> {
+            trainer.setTrainees(null);
+            trainer.setActive(null);
+        });
 
-        TraineeRequestDTO request = new TraineeRequestDTO();
-        request.setUsername("miguel.rodriguez");
-        request.setTrainers(updatedTrainersUsernames);
+        TraineeRequestDTO requestDTO = new TraineeRequestDTO();
+        requestDTO.setTrainers(List.of(allTrainers.get(0).getUsername(), allTrainers.get(1).getUsername()));
 
-        when(trainerRepository.findAll()).thenReturn(allTrainers);
-        when(traineeRepository.getReferenceById(anyLong())).thenReturn(trainee);
+        when(trainerService.getVerifiedTrainersByUsernameList(TX_ID, requestDTO.getTrainers()))
+                .thenReturn(updatedTrainersList);
+        when(traineeRepository.findById(anyLong())).thenReturn(Optional.of(trainee));
 
-        List<Trainer> actualList = traineeService.updateTrainerList(TX_ID, 1, request);
+        List<TrainerResponseDTO> actualList = traineeService.updateTrainerList(TX_ID, 1, requestDTO);
 
         assertThat(actualList)
-                .hasSameSizeAs(updatedTrainersUsernames)
-                .hasSameElementsAs(updatedTrainersList);
+                .hasSameSizeAs(updatedTrainersList)
+                .containsExactlyInAnyOrderElementsOf(expectedList);
         verify(traineeRepository, atLeastOnce()).save(trainee);
     }
 
     @Test
-    void testUpdateTrainerListNoSuchTrainer() {
+    void testUpdateTrainerListNoSuchTrainee() {
         List<Trainer> allTrainers = getAllTestTrainers();
-        TraineeRequestDTO request = new TraineeRequestDTO();
-        request.setUsername("test");
-        request.setTrainers(List.of("no_such_trainer1", "no_such_trainer2"));
+        List<Trainer> updatedTrainersList = List.of(allTrainers.get(0), allTrainers.get(1));
 
-        when(trainerRepository.findAll()).thenReturn(allTrainers);
+        TraineeRequestDTO requestDTO = new TraineeRequestDTO();
+        requestDTO.setTrainers(List.of(allTrainers.get(0).getUsername(), allTrainers.get(1).getUsername()));
 
-        Assertions.assertThrows(NoSuchTrainerExistException.class,
-                () -> traineeService.updateTrainerList(TX_ID, 1, request));
+        when(trainerService.getVerifiedTrainersByUsernameList(TX_ID, requestDTO.getTrainers()))
+                .thenReturn(updatedTrainersList);
+        when(traineeRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        Assertions.assertThrows(NoSuchTraineeExistException.class,
+                () -> traineeService.updateTrainerList(TX_ID, 1, requestDTO));
+
+        verifyNoMoreInteractions(traineeRepository);
     }
 
     private Trainee getTestTrainee() {
@@ -293,34 +243,30 @@ class TraineeServiceTest {
         ));
     }
 
-    private List<Training> getTestTrainings() {
-        return List.of(
-                new Training(getTestTrainee(), getTestTrainer1(), "First visit",
-                        getTestTrainingType(), LocalDate.now(), 60),
-                new Training(getTestTrainee(), getTestTrainer1(), "Second visit",
-                        getTestTrainingType(), LocalDate.now(), 90),
-                new Training(getTestTrainee(), getTestTrainer2(), "Third visit",
-                        getTestTrainingType(), LocalDate.now(), 120)
-        );
-    }
-
-    private Trainee getCreateRequest() {
-        Trainee request = new Trainee();
+    private TraineeRequestDTO getCreateRequestDTO() {
         Trainee trainee = getTestTrainee();
 
-        request.setFirstName(trainee.getFirstName());
-        request.setLastName(trainee.getLastName());
-        request.setDateOfBirth(trainee.getDateOfBirth());
-        request.setAddress(trainee.getAddress());
+        TraineeRequestDTO requestDTO = new TraineeRequestDTO();
 
-        return request;
+        requestDTO.setFirstName(trainee.getFirstName());
+        requestDTO.setLastName(trainee.getLastName());
+        requestDTO.setDateOfBirth(trainee.getDateOfBirth());
+        requestDTO.setAddress(trainee.getAddress());
+
+        return requestDTO;
     }
 
-    private TrainingGetListRequestDTO getEmptyFiltersRequest() {
-        TrainingGetListRequestDTO request = new TrainingGetListRequestDTO();
-        request.setUsername("test");
-        request.setPassword("test");
+    private TraineeRequestDTO getUpdateRequestDTO() {
+        Trainee updatedTrainee = getUpdatedTrainee();
 
-        return request;
+        TraineeRequestDTO requestDTO = new TraineeRequestDTO();
+
+        requestDTO.setFirstName(updatedTrainee.getFirstName());
+        requestDTO.setLastName(updatedTrainee.getLastName());
+        requestDTO.setDateOfBirth(updatedTrainee.getDateOfBirth());
+        requestDTO.setActive(updatedTrainee.getActive());
+        requestDTO.setAddress(updatedTrainee.getAddress());
+
+        return requestDTO;
     }
 }

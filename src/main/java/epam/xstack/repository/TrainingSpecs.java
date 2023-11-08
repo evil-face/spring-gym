@@ -9,6 +9,7 @@ public final class TrainingSpecs {
     private TrainingSpecs() {
         throw new IllegalStateException("Utility class");
     }
+
     public static Specification<Training> traineeHasId(long id) {
         return (root, query, builder) -> builder.equal(root.get("trainee").get("id"), id);
     }

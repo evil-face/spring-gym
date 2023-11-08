@@ -1,5 +1,8 @@
 package epam.xstack.integration;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import epam.xstack.model.Trainee;
 import io.zonky.test.db.AutoConfigureEmbeddedDatabase;
 import org.hibernate.Session;
@@ -17,6 +20,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -35,24 +40,28 @@ import java.util.Map;
 final class AuthControllerITest {
     @Autowired
     TestRestTemplate restTemplate;
+
     @Autowired
     EntityManager entityManager;
 
     @LocalServerPort
     private int port;
     private String baseUrl;
+    private String jwtToken;
 
     @BeforeAll
-    void setup() {
-        baseUrl = "http://localhost:" + port;
+    void setup() throws URISyntaxException, JsonProcessingException {
+        baseUrl = "http://localhost:" + port + "/api/v1/auth";
+        jwtToken = getJwtToken();
     }
-
-    // todo find out if we can send request GET+json payload in RestTemplate
 
     @Test
     void testChangePassword_ReturnsOkResponseEntity() throws URISyntaxException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
         String newPassword = "password22";
 
         Map<String, String> jsonMap = Map.of(
@@ -64,13 +73,13 @@ final class AuthControllerITest {
         RestTemplate restTemplate = new RestTemplate();
 
         ResponseEntity<String> responseEntity = restTemplate.exchange(
-                new URI(baseUrl + "/api/v1/auth/2"), HttpMethod.PUT, request, String.class);
+                new URI(baseUrl + "/2/password"), HttpMethod.PUT, request, String.class);
 
         assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
 
         try (Session session = entityManager.unwrap(Session.class)) {
             Trainee trainee = session.get(Trainee.class, 2L);
-            assertThat(trainee.getPassword()).isEqualTo(newPassword);
+            assertThat(passwordEncoder.matches(newPassword, trainee.getPassword())).isTrue();
         }
     }
 
@@ -78,6 +87,7 @@ final class AuthControllerITest {
     void testChangePassword_ReturnsUnprocessableEntity() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(jwtToken);
 
         Map<String, String> jsonMap = Map.of(
                 "username", "",
@@ -88,7 +98,8 @@ final class AuthControllerITest {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpClientErrorException exception = Assertions.assertThrows(HttpClientErrorException.class, () -> {
-            restTemplate.exchange(new URI(baseUrl + "/api/v1/auth/2"), HttpMethod.PUT, request, String.class);
+            restTemplate.exchange(
+                    new URI(baseUrl + "/2/password"), HttpMethod.PUT, request, String.class);
         });
 
         assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY);
@@ -96,5 +107,27 @@ final class AuthControllerITest {
                 .contains("Password cannot be empty")
                 .contains("Username cannot be empty")
                 .contains("New password cannot be empty");
+    }
+
+    private String getJwtToken() throws URISyntaxException, JsonProcessingException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        Map<String, String> jsonMap = Map.of(
+                "username", "bob",
+                "password", "password2");
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(jsonMap, headers);
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ResponseEntity<String> responseEntity = restTemplate.exchange(
+                new URI(baseUrl), HttpMethod.POST, request, String.class);
+
+        String responseBody = responseEntity.getBody();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, String> responseMap =
+                objectMapper.readValue(responseBody, new TypeReference<Map<String, String>>() {});
+
+        return responseMap.get("jwt-token");
     }
 }

@@ -6,18 +6,25 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import epam.xstack.model.Trainer;
 
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.Set;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public final class TraineeResponseDTO {
+public class TraineeResponseDTO {
     private String username;
+
     private String firstName;
+
     private String lastName;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate dateOfBirth;
+
     private String address;
-    private Boolean isActive;
-    @JsonIgnoreProperties({"id", "password", "trainingList", "trainees", "isActive"})
+
+    private Boolean active;
+
+    @JsonIgnoreProperties({"id", "password", "trainingList", "trainees", "active"})
     private Set<Trainer> trainers;
 
     public String getUsername() {
@@ -60,12 +67,12 @@ public final class TraineeResponseDTO {
         this.address = address;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public Boolean getActive() {
+        return active;
     }
 
-    public void setIsActive(Boolean active) {
-        isActive = active;
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
     public Set<Trainer> getTrainers() {
@@ -74,5 +81,28 @@ public final class TraineeResponseDTO {
 
     public void setTrainers(Set<Trainer> trainers) {
         this.trainers = trainers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        TraineeResponseDTO that = (TraineeResponseDTO) o;
+        return Objects.equals(username, that.username)
+                && Objects.equals(firstName, that.firstName)
+                && Objects.equals(lastName, that.lastName)
+                && Objects.equals(dateOfBirth, that.dateOfBirth)
+                && Objects.equals(address, that.address)
+                && Objects.equals(active, that.active)
+                && Objects.equals(trainers, that.trainers);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, firstName, lastName, dateOfBirth, address, active, trainers);
     }
 }

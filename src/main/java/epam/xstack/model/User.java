@@ -18,28 +18,33 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
+
     @Column(nullable = false)
     @NotBlank(message = "First name cannot be empty")
     private String firstName;
+
     @Column(nullable = false)
     @NotBlank(message = "Last name cannot be empty")
     private String lastName;
+
     @Column(nullable = false)
     @NotBlank(message = "Username cannot be empty")
     private String username;
+
     @Column(nullable = false)
     @NotBlank(message = "Password cannot be empty")
     private String password;
-    @Column(nullable = false)
-    private Boolean isActive;
+
+    @Column(name = "isActive",nullable = false)
+    private boolean active;
 
     public User(String firstName, String lastName,
-                String username, String password, boolean isActive) {
+                String username, String password, boolean active) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
-        this.isActive = isActive;
+        this.active = active;
     }
 
     public User() {
@@ -85,12 +90,12 @@ public class User {
         this.password = password;
     }
 
-    public Boolean getIsActive() {
-        return isActive;
+    public boolean getActive() {
+        return active;
     }
 
-    public void setIsActive(Boolean active) {
-        isActive = active;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     @Override
@@ -103,7 +108,7 @@ public class User {
         }
         User user = (User) o;
         return id == user.id
-                && isActive == user.isActive
+                && active == user.active
                 && Objects.equals(firstName, user.firstName)
                 && Objects.equals(lastName, user.lastName)
                 && Objects.equals(username, user.username)
@@ -112,6 +117,6 @@ public class User {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, firstName, lastName, username, password, isActive);
+        return Objects.hash(id, firstName, lastName, username, password, active);
     }
 }
