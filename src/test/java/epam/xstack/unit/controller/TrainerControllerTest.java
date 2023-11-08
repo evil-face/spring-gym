@@ -49,6 +49,7 @@ class TrainerControllerTest {
     TrainerService trainerService;
     @Mock
     ModelMapper modelMapper;
+
     private static final String TX_ID = "12345";
 
     @Test
@@ -179,7 +180,7 @@ class TrainerControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
         when(modelMapper.map(requestDTO, Trainer.class)).thenReturn(new Trainer());
-        when(trainerService.update(anyString(), any(Trainer.class), any(), any()))
+        when(trainerService.update(anyString(), any(Trainer.class)))
                 .thenReturn(Optional.of(updatedTrainer));
         when(modelMapper.map(updatedTrainer, TrainerResponseDTO.class)).thenReturn(expectedDTO);
 
@@ -189,7 +190,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedDTO);
 
-        verify(trainerService).update(anyString(), any(Trainer.class), any(), any());
+        verify(trainerService).update(anyString(), any(Trainer.class));
         verifyNoMoreInteractions(trainerService);
     }
 
@@ -201,7 +202,7 @@ class TrainerControllerTest {
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
         when(modelMapper.map(requestDTO, Trainer.class)).thenReturn(new Trainer());
-        when(trainerService.update(anyString(), any(Trainer.class), any(), any()))
+        when(trainerService.update(anyString(), any(Trainer.class)))
                 .thenReturn(Optional.empty());
 
         ResponseEntity<?> response = trainerController.handleUpdateTrainer(
@@ -210,7 +211,7 @@ class TrainerControllerTest {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         assertThat(response.getBody()).isNull();
 
-        verify(trainerService).update(anyString(), any(Trainer.class), any(), any());
+        verify(trainerService).update(anyString(), any(Trainer.class));
         verifyNoMoreInteractions(trainerService);
     }
 

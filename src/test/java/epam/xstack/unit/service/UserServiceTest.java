@@ -1,6 +1,7 @@
 package epam.xstack.unit.service;
 
-import epam.xstack.dao.UserDAO;
+import epam.xstack.model.User;
+import epam.xstack.repository.UserRepository;
 import epam.xstack.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,16 +16,17 @@ import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    private static final int PASSWORD_LENGTH = 10;
     @InjectMocks
     UserService userService;
     @Mock
-    UserDAO userDAO;
+    UserRepository userRepository;
+
+    private static final int PASSWORD_LENGTH = 10;
 
     @Test
     void testGenerateUsername() {
         String expected = "john.wick";
-        when(userDAO.findUsernameOccurencies(expected)).thenReturn(Collections.emptyList());
+        when(userRepository.findByUsernameStartingWith(expected)).thenReturn(Collections.emptyList());
         String actual = userService.generateUsername(" john ", "wi ck ");
 
         assertThat(actual).isEqualTo(expected);
@@ -33,7 +35,10 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameDuplicate() {
         String expected = "john.wick";
-        when(userDAO.findUsernameOccurencies(expected)).thenReturn(List.of("john.wick"));
+        User user = new User();
+        user.setUsername("john.wick");
+
+        when(userRepository.findByUsernameStartingWith(expected)).thenReturn(List.of(user));
         String actual = userService.generateUsername(" john ", "wi ck ");
 
         assertThat(actual).isEqualTo(expected + "1");
@@ -42,7 +47,7 @@ class UserServiceTest {
     @Test
     void testGenerateUsernameBadInput() {
         String expected = "john.wick";
-        when(userDAO.findUsernameOccurencies(expected)).thenReturn(Collections.emptyList());
+        when(userRepository.findByUsernameStartingWith(expected)).thenReturn(Collections.emptyList());
         String actual = userService.generateUsername("1john2", "3wick444");
 
         assertThat(actual).isEqualTo(expected);

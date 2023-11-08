@@ -37,6 +37,7 @@ class TrainingControllerTest {
     TrainingController trainingController;
     @Mock
     TrainingService trainingService;
+
     private static final String TX_ID = "12345";
 
     @Test
@@ -49,13 +50,13 @@ class TrainingControllerTest {
         );
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
-        when(trainingService.findAllTrainingTypes(TX_ID)).thenReturn(trainingTypeList);
+        when(trainingService.findAllTrainingTypes()).thenReturn(trainingTypeList);
 
         ResponseEntity<?> response = trainingController.handleGetAllTrainingTypes(mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(trainingTypeList);
-        verify(trainingService).findAllTrainingTypes(anyString());
+        verify(trainingService).findAllTrainingTypes();
     }
 
     @Test

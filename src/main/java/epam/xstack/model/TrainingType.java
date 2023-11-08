@@ -17,10 +17,8 @@ public final class TrainingType {
     private long id;
     @Column(nullable = false)
     private String trainingTypeName;
-
     @OneToMany(mappedBy = "specialization")
     private List<Trainer> trainerList;
-
     @OneToMany(mappedBy = "trainingType")
     private List<Training> trainingList;
 

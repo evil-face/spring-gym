@@ -1,6 +1,12 @@
 package epam.xstack.model;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OneToMany;
 import javax.validation.constraints.Past;
 
 import java.time.LocalDate;
@@ -17,7 +23,6 @@ public final class Trainee extends User {
     private String address;
     @OneToMany(mappedBy = "trainee", cascade = CascadeType.REMOVE)
     private List<Training> trainingList;
-
     @ManyToMany
     @JoinTable(
             name = "trainee_trainer",

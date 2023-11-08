@@ -44,7 +44,7 @@ public final class TrainingController {
     public ResponseEntity<List<TrainingType>> handleGetAllTrainingTypes(HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
 
-        List<TrainingType> response = trainingService.findAllTrainingTypes(txID);
+        List<TrainingType> response = trainingService.findAllTrainingTypes();
 
         LOGGER.info(LOG_MESSAGE, txID, HttpStatus.OK);
         return ResponseEntity.ok().body(response);

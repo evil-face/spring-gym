@@ -1,6 +1,5 @@
 package epam.xstack.unit.service;
 
-import epam.xstack.dao.TrainingDAO;
 import epam.xstack.dto.training.TrainingCreateRequestDTO;
 import epam.xstack.exception.NoSuchTraineeExistException;
 import epam.xstack.exception.NoSuchTrainerExistException;
@@ -8,6 +7,7 @@ import epam.xstack.model.Trainee;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
+import epam.xstack.repository.TrainingRepository;
 import epam.xstack.service.TraineeService;
 import epam.xstack.service.TrainerService;
 import epam.xstack.service.TrainingService;
@@ -19,13 +19,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TrainingServiceTest {
@@ -36,7 +35,8 @@ class TrainingServiceTest {
     @Mock
     TrainerService trainerService;
     @Mock
-    TrainingDAO trainingDAO;
+    TrainingRepository trainingRepository;
+
     private static final String TX_ID = "12345";
 
     @Test
@@ -49,7 +49,6 @@ class TrainingServiceTest {
                 .thenReturn(Optional.of(trainee));
         when(trainerService.findByUsername(TX_ID, createRequest.getTrainerUsername()))
                 .thenReturn(Optional.of(trainer));
-        doNothing().when(trainingDAO).save(anyString(), any(Training.class));
 
         Training actual = trainingService.createTraining(TX_ID, createRequest);
 
@@ -58,6 +57,10 @@ class TrainingServiceTest {
         assertThat(actual.getTrainingName()).isEqualTo(createRequest.getTrainingName());
         assertThat(actual.getTrainingDate()).isEqualTo(createRequest.getTrainingDate());
         assertThat(actual.getTrainingDuration()).isEqualTo(createRequest.getTrainingDuration());
+
+        verify(trainingRepository, atLeastOnce()).save(any(Training.class));
+        verify(traineeService, atLeastOnce()).update(anyString(), any(Trainee.class));
+        verify(trainerService, atLeastOnce()).update(anyString(), any(Trainer.class));
     }
     @Test
     void testCreateTrainingNoSuchTrainee() {
@@ -83,13 +86,19 @@ class TrainingServiceTest {
     }
 
     private Trainee getTestTrainee() {
-        return new Trainee("Weak", "Dude", "weak.dude",
+        Trainee trainee = new Trainee("Weak", "Dude", "weak.dude",
                 "weakpassword", true, LocalDate.now(), "Weak city");
+        trainee.setTrainers(new HashSet<>());
+
+        return trainee;
     }
 
     private Trainer getTestTrainer() {
-        return new Trainer("Miguel", "Rodriguez", "miguel.rodriguez",
+        Trainer trainer =  new Trainer("Miguel", "Rodriguez", "miguel.rodriguez",
                 "qwerty", true, getTestTrainingType());
+        trainer.setTrainees(new HashSet<>());
+
+        return trainer;
     }
 
     private TrainingType getTestTrainingType() {
