@@ -20,18 +20,16 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.jms.core.JmsTemplate;
+import org.springframework.jms.core.MessagePostProcessor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
+import javax.jms.JMSException;
+import javax.jms.Message;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -44,18 +42,19 @@ public class TrainerService {
     private final UserService userService;
 
     private final ModelMapper modelMapper;
-    private final RestTemplate restTemplate;
+    private final JmsTemplate jmsTemplate;
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
+    private static final String WORKLOAD_QUEUE = "trainer.workload.queue";
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, UserService userService,
                           MeterRegistry meterRegistry, TrainingTypeRepository trainingTypeRepository,
-                          ModelMapper modelMapper, RestTemplate restTemplate) {
+                          ModelMapper modelMapper, JmsTemplate jmsTemplate) {
         this.trainerRepository = trainerRepository;
         this.userService = userService;
         this.trainingTypeRepository = trainingTypeRepository;
         this.modelMapper = modelMapper;
-        this.restTemplate = restTemplate;
+        this.jmsTemplate = jmsTemplate;
 
         Gauge.builder("custom.trainer.count", trainerRepository, TrainerRepository::count)
                 .register(meterRegistry);
@@ -159,20 +158,16 @@ public class TrainerService {
                 action
         );
 
-        String url = "http://trainer-workload-service/api/v1/trainerworkload";
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.add("txID", txID);
-        headers.setBearerAuth(extractJWT(txID));
-        HttpEntity<TrainerWorkloadRequestDTO> request = new HttpEntity<>(requestDTO, headers);
-
         LOGGER.info("TX ID: {} — Sending a '{}' request to 'trainer-workload' microservice for '{}' trainer...",
                 txID, action, trainer.getUsername());
 
-        ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
-
-        LOGGER.info("TX ID: {} — Got a response from 'trainer-workload' microservice with status code {}",
-                txID, response.getStatusCode());
+        jmsTemplate.convertAndSend(WORKLOAD_QUEUE, requestDTO, new MessagePostProcessor() {
+            @Override
+            public Message postProcessMessage(Message message) throws JMSException {
+                message.setStringProperty("txID", txID);
+                return message;
+            }
+        });
     }
 
     public void updateTrainerWorkloadFallback(String txID, Training training,
@@ -184,6 +179,7 @@ public class TrainerService {
                         "microservice for '{}' trainer. Consider adding workload manually later: {}.{}, {} minutes",
                 txID, action, trainer.getUsername(),
                 trainingDate.getMonth(), trainingDate.getYear(), training.getTrainingDuration());
+        LOGGER.warn("TX ID: {} — Cause: {}", txID, e.getMessage());
     }
 
     private void checkIfNotRegisteredYet(String txID, Trainer newTrainer) {

@@ -1,5 +1,9 @@
 package epam.xstack.dto.workload;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
+
 import java.time.LocalDate;
 
 public final class TrainerWorkloadRequestDTO {
@@ -7,11 +11,16 @@ public final class TrainerWorkloadRequestDTO {
     private String firstName;
     private String lastName;
     private Boolean active;
+
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonSerialize(using = LocalDateSerializer.class)
     private LocalDate trainingDate;
+
     private int trainingDuration;
     private Action action;
 
-    public TrainerWorkloadRequestDTO(String username, String firstName, String lastName, Boolean isActive, LocalDate trainingDate, int trainingDuration, Action action) {
+    public TrainerWorkloadRequestDTO(String username, String firstName, String lastName,
+                                     Boolean isActive, LocalDate trainingDate, int trainingDuration, Action action) {
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
