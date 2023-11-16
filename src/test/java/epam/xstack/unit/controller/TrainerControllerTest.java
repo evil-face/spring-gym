@@ -238,7 +238,6 @@ class TrainerControllerTest {
     void testGetTrainingsWithFiltering_ReturnsOkEntity() {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
         TrainingGetListRequestDTO requestDTO = new TrainingGetListRequestDTO();
-        BindingResult bindingResult = new BeanPropertyBindingResult(requestDTO, "requestDTO");
         List<TrainingResponseDTO> expectedList = new ArrayList<>();
 
         when(mockRequest.getAttribute("txID")).thenReturn(TX_ID);
@@ -246,7 +245,7 @@ class TrainerControllerTest {
                 .thenReturn(expectedList);
 
         ResponseEntity<?> response = trainerController.handleGetTrainingsWithFiltering(
-                1, requestDTO, bindingResult, mockRequest);
+                1, requestDTO, mockRequest);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(expectedList);
