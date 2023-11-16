@@ -1,8 +1,6 @@
 package epam.xstack.config;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +10,8 @@ import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.support.converter.MappingJackson2MessageConverter;
 import org.springframework.jms.support.converter.MessageConverter;
 import org.springframework.jms.support.converter.MessageType;
+
+import java.util.List;
 
 @Configuration
 @EnableJms
@@ -25,10 +25,8 @@ public class JmsConfig {
     @Value("${jms.activemq.url}")
     private String jmsUrl;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(JmsConfig.class);
-
     @Bean
-    public MessageConverter jacksonJmsMessageConverter(){
+    public MessageConverter jacksonJmsMessageConverter() {
         MappingJackson2MessageConverter converter = new MappingJackson2MessageConverter();
         converter.setTargetType(MessageType.TEXT);
         converter.setTypeIdPropertyName("_type");
@@ -37,14 +35,15 @@ public class JmsConfig {
     }
 
     @Bean
-    public ActiveMQConnectionFactory connectionFactory(){
+    public ActiveMQConnectionFactory connectionFactory() {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(jmsUsername, jmsPassword, jmsUrl);
+        factory.setTrustedPackages(List.of("epam.xstack"));
 
         return factory;
     }
 
     @Bean
-    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory(){
+    public DefaultJmsListenerContainerFactory jmsListenerContainerFactory() {
         DefaultJmsListenerContainerFactory factory = new DefaultJmsListenerContainerFactory();
 
         factory.setConnectionFactory(connectionFactory());
@@ -55,7 +54,7 @@ public class JmsConfig {
     }
 
     @Bean
-    public JmsTemplate jmsTemplate(){
+    public JmsTemplate jmsTemplate() {
         JmsTemplate jmsTemplate = new JmsTemplate(connectionFactory());
 
         jmsTemplate.setMessageConverter(jacksonJmsMessageConverter());
