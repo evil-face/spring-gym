@@ -6,13 +6,11 @@ import epam.xstack.dto.trainer.TrainerResponseDTO;
 import epam.xstack.dto.workload.Action;
 import epam.xstack.dto.workload.TrainerWorkloadRequestDTO;
 import epam.xstack.exception.NoSuchTrainerExistException;
-import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.Training;
 import epam.xstack.model.TrainingType;
 import epam.xstack.repository.TrainerRepository;
-import epam.xstack.repository.TrainingTypeRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -21,15 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jms.core.JmsTemplate;
-import org.springframework.jms.core.MessagePostProcessor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.jms.JMSException;
-import javax.jms.Message;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -38,8 +30,8 @@ import java.util.Optional;
 public class TrainerService {
     private final TrainerRepository trainerRepository;
 
-    private final TrainingTypeRepository trainingTypeRepository;
     private final UserService userService;
+    private final TrainingTypeService trainingTypeService;
 
     private final ModelMapper modelMapper;
     private final JmsTemplate jmsTemplate;
@@ -48,11 +40,11 @@ public class TrainerService {
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, UserService userService,
-                          MeterRegistry meterRegistry, TrainingTypeRepository trainingTypeRepository,
+                          MeterRegistry meterRegistry, TrainingTypeService trainingTypeService,
                           ModelMapper modelMapper, JmsTemplate jmsTemplate) {
         this.trainerRepository = trainerRepository;
         this.userService = userService;
-        this.trainingTypeRepository = trainingTypeRepository;
+        this.trainingTypeService = trainingTypeService;
         this.modelMapper = modelMapper;
         this.jmsTemplate = jmsTemplate;
 
@@ -67,18 +59,18 @@ public class TrainerService {
         String username = userService.generateUsername(newTrainer.getFirstName(), newTrainer.getLastName());
         String password = userService.generatePassword();
 
-        newTrainer.setSpecialization(new TrainingType(trainerDTO.getSpecialization(), ""));
         newTrainer.setUsername(username);
         newTrainer.setPassword(password);
         newTrainer.setActive(true);
+        newTrainer.setSpecialization(getSpecializationIfExists(txID, trainerDTO));
 
-        checkIfSpecializationExists(txID, trainerDTO);
         checkIfNotRegisteredYet(txID, newTrainer);
 
         trainerRepository.save(newTrainer);
 
         LOGGER.info("TX ID: {} — Successfully saved new trainer with username '{}' and id '{}'",
                 txID, newTrainer.getUsername(), newTrainer.getId());
+
         return modelMapper.map(newTrainer, AuthDTO.class);
     }
 
@@ -106,7 +98,7 @@ public class TrainerService {
     public Optional<TrainerResponseDTO> update(String txID, long id, TrainerRequestDTO trainerDTO) {
         Trainer updatedTrainer = modelMapper.map(trainerDTO, Trainer.class);
         updatedTrainer.setId(id);
-        updatedTrainer.setSpecialization(checkIfSpecializationExists(txID, trainerDTO));
+        updatedTrainer.setSpecialization(getSpecializationIfExists(txID, trainerDTO));
 
         Optional<Trainer> trainerOpt = trainerRepository.findById(updatedTrainer.getId())
                 .map(trainer -> {
@@ -161,12 +153,9 @@ public class TrainerService {
         LOGGER.info("TX ID: {} — Sending a '{}' request to 'trainer-workload' microservice for '{}' trainer...",
                 txID, action, trainer.getUsername());
 
-        jmsTemplate.convertAndSend(WORKLOAD_QUEUE, requestDTO, new MessagePostProcessor() {
-            @Override
-            public Message postProcessMessage(Message message) throws JMSException {
-                message.setStringProperty("txID", txID);
-                return message;
-            }
+        jmsTemplate.convertAndSend(WORKLOAD_QUEUE, requestDTO, message -> {
+            message.setStringProperty("txID", txID);
+            return message;
         });
     }
 
@@ -175,8 +164,8 @@ public class TrainerService {
         Trainer trainer = training.getTrainer();
         LocalDate trainingDate = training.getTrainingDate();
 
-        LOGGER.warn("TX ID: {} — Circuit breaker engaged: Couldn't send a '{}' request to 'trainer-workload' " +
-                        "microservice for '{}' trainer. Consider adding workload manually later: {}.{}, {} minutes",
+        LOGGER.warn("TX ID: {} — Circuit breaker engaged: Couldn't send a '{}' request to 'trainer-workload' "
+                        + "microservice for '{}' trainer. Consider adding workload manually later: {}.{}, {} minutes",
                 txID, action, trainer.getUsername(),
                 trainingDate.getMonth(), trainingDate.getYear(), training.getTrainingDuration());
         LOGGER.warn("TX ID: {} — Cause: {}", txID, e.getMessage());
@@ -193,15 +182,8 @@ public class TrainerService {
         }
     }
 
-    private TrainingType checkIfSpecializationExists(String txID, TrainerRequestDTO trainer) {
-        Optional<TrainingType> trainingTypeOpt = trainingTypeRepository.findById(
-                trainer.getSpecialization());
-
-        if (trainingTypeOpt.isEmpty()) {
-            throw new NoSuchTrainingTypeException(txID);
-        } else {
-            return trainingTypeOpt.get();
-        }
+    private TrainingType getSpecializationIfExists(String txID, TrainerRequestDTO trainer) {
+        return trainingTypeService.getSpecializationIfExists(txID, trainer.getSpecialization());
     }
 
     private void updateFields(Trainer existingTrainer, Trainer updatedTrainer) {
@@ -209,16 +191,5 @@ public class TrainerService {
         existingTrainer.setLastName(updatedTrainer.getLastName());
         existingTrainer.setSpecialization(updatedTrainer.getSpecialization());
         existingTrainer.setActive(updatedTrainer.getActive());
-    }
-
-    private String extractJWT(String txID) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            return jwtAuth.getToken().getTokenValue();
-        } else {
-            LOGGER.warn("TX ID: {} — No JWT found in authentication", txID);
-            return null;
-        }
     }
 }

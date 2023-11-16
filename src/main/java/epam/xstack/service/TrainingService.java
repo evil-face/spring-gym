@@ -79,6 +79,7 @@ public class TrainingService {
         traineeService.save(trainee);
         trainer.getTrainees().add(trainee);
         trainerService.save(trainer);
+
         trainerService.updateTrainerWorkload(txID, newTraining, Action.ADD);
 
         return newTraining;

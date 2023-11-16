@@ -8,10 +8,9 @@ import epam.xstack.exception.NoSuchTrainingTypeException;
 import epam.xstack.exception.PersonAlreadyRegisteredException;
 import epam.xstack.model.Trainer;
 import epam.xstack.model.TrainingType;
-
 import epam.xstack.repository.TrainerRepository;
-import epam.xstack.repository.TrainingTypeRepository;
 import epam.xstack.service.TrainerService;
+import epam.xstack.service.TrainingTypeService;
 import epam.xstack.service.UserService;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Assertions;
@@ -28,9 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.atLeastOnce;
 
 @ExtendWith(MockitoExtension.class)
 class TrainerServiceTest {
@@ -41,7 +40,7 @@ class TrainerServiceTest {
     TrainerRepository trainerRepository;
 
     @Mock
-    TrainingTypeRepository trainingTypeRepository;
+    TrainingTypeService trainingTypeService;
 
     @Mock
     UserService userService;
@@ -62,8 +61,8 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequestDTO.getFirstName(), createRequestDTO.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainingTypeRepository.findById(createRequestDTO.getSpecialization()))
-                .thenReturn(Optional.of(expected.getSpecialization()));
+        when(trainingTypeService.getSpecializationIfExists(TX_ID, createRequestDTO.getSpecialization()))
+                .thenReturn(expected.getSpecialization());
         when(trainerRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(Collections.emptyList());
 
         AuthDTO actual = trainerService.createTrainer(TX_ID, createRequestDTO);
@@ -80,8 +79,8 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequestDTO.getFirstName(), createRequestDTO.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainingTypeRepository.findById(createRequestDTO.getSpecialization()))
-                .thenReturn(Optional.of(expected.getSpecialization()));
+        when(trainingTypeService.getSpecializationIfExists(TX_ID, createRequestDTO.getSpecialization()))
+                .thenReturn(expected.getSpecialization());
         when(trainerRepository.findByUsernameStartingWith(expected.getUsername())).thenReturn(List.of(expected));
 
         Assertions.assertThrows(PersonAlreadyRegisteredException.class,
@@ -97,8 +96,8 @@ class TrainerServiceTest {
         when(userService.generateUsername(createRequestDTO.getFirstName(), createRequestDTO.getLastName()))
                 .thenReturn(expected.getUsername());
         when(userService.generatePassword()).thenReturn(expected.getPassword());
-        when(trainingTypeRepository.findById(createRequestDTO.getSpecialization()))
-                .thenReturn(Optional.empty());
+        when(trainingTypeService.getSpecializationIfExists(TX_ID, createRequestDTO.getSpecialization()))
+                .thenThrow(NoSuchTrainingTypeException.class);
 
         Assertions.assertThrows(NoSuchTrainingTypeException.class,
                 () -> trainerService.createTrainer(TX_ID, createRequestDTO));
@@ -122,8 +121,8 @@ class TrainerServiceTest {
         Trainer initial = getTestTrainer();
         TrainerRequestDTO updateRequestDTO = getUpdateRequestDTO();
 
-        when(trainingTypeRepository.findById(initial.getSpecialization().getId()))
-                .thenReturn(Optional.of(initial.getSpecialization()));
+        when(trainingTypeService.getSpecializationIfExists(TX_ID, initial.getSpecialization().getId()))
+                .thenReturn(initial.getSpecialization());
         when(trainerRepository.findById(anyLong())).thenReturn(Optional.of(initial));
 
         Optional<TrainerResponseDTO> actual = trainerService.update(TX_ID, 1, updateRequestDTO);
@@ -142,8 +141,8 @@ class TrainerServiceTest {
     void testUpdateNoSuchSpecialization() {
         TrainerRequestDTO updateRequestDTO = getUpdateRequestDTO();
 
-        when(trainingTypeRepository.findById(updateRequestDTO.getSpecialization()))
-                .thenReturn(Optional.empty());
+        when(trainingTypeService.getSpecializationIfExists(TX_ID, updateRequestDTO.getSpecialization()))
+                .thenThrow(NoSuchTrainingTypeException.class);
 
         Assertions.assertThrows(NoSuchTrainingTypeException.class,
                 () -> trainerService.update(TX_ID, 1, updateRequestDTO));
