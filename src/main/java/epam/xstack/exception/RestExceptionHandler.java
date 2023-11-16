@@ -13,6 +13,7 @@ import java.util.Arrays;
 
 @RestControllerAdvice
 public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
+    private static final int LOG_STACK_TRACE_DEPTH = 5;
     private static final Logger EXCEPTION_HANDLER_LOGGER = LoggerFactory.getLogger(RestExceptionHandler.class);
     private static final String LOG_MESSAGE_WITH_ERRORS = "TX ID: {} — {} — {}";
     private static final String LOG_MESSAGE = "TX ID: {} — {}";
@@ -26,7 +27,7 @@ public final class RestExceptionHandler extends ResponseEntityExceptionHandler {
         String logMessage = "Global exception was caught, stacktrace";
         EXCEPTION_HANDLER_LOGGER.error(LOG_MESSAGE_WITH_ERRORS, null, logMessage,
                 e.getMessage() + Arrays.stream(e.getStackTrace())
-                        .limit(5).map(StackTraceElement::toString).toList());
+                        .limit(LOG_STACK_TRACE_DEPTH).map(StackTraceElement::toString).toList());
 
         return ResponseEntity.internalServerError().body(errorBody);
     }

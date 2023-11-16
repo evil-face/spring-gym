@@ -133,7 +133,8 @@ public class TraineeService {
             trainee.setActive(newStatus);
 
             traineeRepository.save(trainee);
-            LOGGER.info("TX ID: {} — Successfully changed status for trainee with  id '{}' to '{}'", txID, id, newStatus);
+            LOGGER.info("TX ID: {} — Successfully changed status for trainee with  id '{}' to '{}'",
+                    txID, id, newStatus);
         } else {
             throw new NoSuchTraineeExistException(txID);
         }

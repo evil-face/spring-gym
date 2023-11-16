@@ -22,7 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import static epam.xstack.repository.TrainingSpecs.*;
+import static epam.xstack.repository.TrainingSpecs.hasPeriodFrom;
+import static epam.xstack.repository.TrainingSpecs.hasPeriodTo;
+import static epam.xstack.repository.TrainingSpecs.hasTrainingType;
+import static epam.xstack.repository.TrainingSpecs.traineeHasId;
+import static epam.xstack.repository.TrainingSpecs.traineeHasUsername;
+import static epam.xstack.repository.TrainingSpecs.trainerHasId;
+import static epam.xstack.repository.TrainingSpecs.trainerHasUsername;
 import static org.springframework.data.jpa.domain.Specification.where;
 
 @Service

@@ -35,7 +35,7 @@ public class User {
     @NotBlank(message = "Password cannot be empty")
     private String password;
 
-    @Column(name = "isActive",nullable = false)
+    @Column(name = "isActive", nullable = false)
     private boolean active;
 
     public User(String firstName, String lastName,

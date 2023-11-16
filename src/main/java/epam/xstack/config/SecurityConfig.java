@@ -65,8 +65,7 @@ public class SecurityConfig {
                         .antMatchers("/api/v1/auth/{userId:[0-9]+}/password",
                                 "/api/v1/trainees/{userId:[0-9]+}/**",
                                 "/api/v1/trainers/{userId:[0-9]+}/**")
-//                        .access("isAuthenticated and @securityConfig.checkUserId(authentication,#userId)")
-                        .access("isAuthenticated")
+                        .access("isAuthenticated and @securityConfig.checkUserId(authentication,#userId)")
 
                         .antMatchers("/api/v1/trainings/**")
                         .authenticated()
@@ -129,16 +128,16 @@ public class SecurityConfig {
     }
 
     private static final String[] AUTH_WHITELIST = {
-            // -- Swagger UI v2
-            "/v2/api-docs",
-            "/swagger-resources",
-            "/swagger-resources/**",
-            "/configuration/ui",
-            "/configuration/security",
-            "/swagger-ui.html",
-            "/webjars/**",
-            // -- Swagger UI v3 (OpenAPI)
-            "/v3/api-docs/**",
-            "/swagger-ui/**"
+        // -- Swagger UI v2
+        "/v2/api-docs",
+        "/swagger-resources",
+        "/swagger-resources/**",
+        "/configuration/ui",
+        "/configuration/security",
+        "/swagger-ui.html",
+        "/webjars/**",
+        // -- Swagger UI v3 (OpenAPI)
+        "/v3/api-docs/**",
+        "/swagger-ui/**"
     };
 }

@@ -1,12 +1,12 @@
 package epam.xstack.controller;
 
+import epam.xstack.dto.auth.AuthDTO;
+import epam.xstack.dto.trainee.TraineeRequestDTO;
 import epam.xstack.dto.trainee.TraineeResponseDTO;
 import epam.xstack.dto.trainee.validationgroup.TraineeActivateGroup;
 import epam.xstack.dto.trainee.validationgroup.TraineeCreateGroup;
-import epam.xstack.dto.trainee.TraineeRequestDTO;
 import epam.xstack.dto.trainee.validationgroup.TraineeUpdateGroup;
 import epam.xstack.dto.trainee.validationgroup.TraineeUpdateTrainerListGroup;
-import epam.xstack.dto.auth.AuthDTO;
 import epam.xstack.dto.trainer.TrainerResponseDTO;
 import epam.xstack.dto.training.TrainingGetListRequestDTO;
 import epam.xstack.dto.training.TrainingResponseDTO;
@@ -35,7 +35,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -180,11 +179,9 @@ public final class TraineeController {
             @ApiResponse(responseCode = "404", description = "Trainee not found"),
             @ApiResponse(responseCode = "422", description = "Username or password is null")})
     public ResponseEntity<?> handleGetTrainingsWithFiltering(@PathVariable("id") long id,
-                                                             @RequestBody @Valid TrainingGetListRequestDTO requestDTO,
-                                                             BindingResult bindingResult,
+                                                             @RequestBody TrainingGetListRequestDTO requestDTO,
                                                              HttpServletRequest httpServletRequest) {
         String txID = (String) httpServletRequest.getAttribute("txID");
-        validatePayload(txID, bindingResult);
 
         List<TrainingResponseDTO> responseDTO = trainingService.getTraineeTrainingsWithFiltering(id, requestDTO);
 
