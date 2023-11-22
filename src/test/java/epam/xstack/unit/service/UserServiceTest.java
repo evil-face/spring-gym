@@ -92,17 +92,20 @@ class UserServiceTest {
     @Test
     void testUpdatePassword() {
         String username = "test";
+        String oldPassword = "oldpass";
         String newPassword = "newpass";
 
         PasswordChangeRequestDTO requestDTO = new PasswordChangeRequestDTO();
         requestDTO.setUsername(username);
+        requestDTO.setOldPassword(oldPassword);
         requestDTO.setNewPassword(newPassword);
 
         User user = new User();
         user.setUsername(username);
-        user.setPassword(newPassword);
+        user.setPassword(oldPassword);
 
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(oldPassword, oldPassword)).thenReturn(true);
         when(passwordEncoder.encode(newPassword)).thenReturn("encodedpass");
         boolean actual = userService.updatePassword(TX_ID, requestDTO);
 

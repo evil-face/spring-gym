@@ -67,6 +67,7 @@ public class UserService {
     @Transactional
     public boolean updatePassword(String txID, PasswordChangeRequestDTO requestDTO) {
         String username = requestDTO.getUsername();
+        String oldPassword = requestDTO.getOldPassword();
         String newPassword = requestDTO.getNewPassword();
         Optional<User> userOpt = userRepository.findByUsername(username);
 
@@ -75,6 +76,13 @@ public class UserService {
             return false;
         } else {
             User user = userOpt.get();
+
+            if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+                LOGGER.warn("TX ID: {} — Authorized user attempted to change password for username '{}' with "
+                        + "incorrect password in request", txID, username);
+                throw new UnauthorizedException(txID);
+            }
+
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);
 
