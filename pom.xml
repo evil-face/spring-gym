@@ -226,6 +226,15 @@
                 <version>3.0.0</version>
             </plugin>
 
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>epam.xstack.SpringGymApplication</mainClass>
+                    <layout>JAR</layout>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
 </project>
