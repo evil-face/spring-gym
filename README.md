@@ -4,7 +4,7 @@ This project is a gym management system that consists of two separate microservi
 
 ## Features
 
-- **Microservices Architecture:** The application is built using a microservices architecture.
+- **Microservices Architecture:** The application is built using a microservices architecture to comminicate with separate [workload microservice](https://github.com/evil-face/trainer-workload-service).
 
 - **REST API:** The main service is equipped with a REST API to facilitate communication and data exchange for gym entities such as 'Trainee', 'Trainer' and 'Training'.
 
