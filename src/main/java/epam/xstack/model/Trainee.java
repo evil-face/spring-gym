@@ -7,6 +7,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.validation.constraints.Past;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.Set;
 
 
 @Entity
+@Table(name = "trainee")
 public class Trainee extends User {
     @Past(message = "Date of birth must be in the past")
     private LocalDate dateOfBirth;

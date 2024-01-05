@@ -5,12 +5,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 @Entity
+@Table(name = "trainer")
 public class Trainer extends User {
     @ManyToOne
     @JoinColumn(name = "specialization", referencedColumnName = "id")

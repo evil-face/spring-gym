@@ -13,7 +13,7 @@ import java.util.Objects;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "User_")
+@Table(name = "user_")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

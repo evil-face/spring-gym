@@ -6,11 +6,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Table(name = "trainingtype")
 public final class TrainingType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

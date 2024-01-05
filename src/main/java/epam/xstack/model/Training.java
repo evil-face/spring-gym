@@ -7,10 +7,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
+@Table(name = "training")
 public final class Training {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
