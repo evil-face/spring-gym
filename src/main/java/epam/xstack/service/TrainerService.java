@@ -18,12 +18,13 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jms.core.JmsTemplate;
+import org.springframework.cloud.aws.messaging.core.QueueMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -34,19 +35,19 @@ public class TrainerService {
     private final TrainingTypeService trainingTypeService;
 
     private final ModelMapper modelMapper;
-    private final JmsTemplate jmsTemplate;
+    private final QueueMessagingTemplate queueMessagingTemplate;
+    private static final String WORKLOAD_QUEUE = "Spring-Gym-Workload-Queue";
     private static final Logger LOGGER = LoggerFactory.getLogger(TrainerService.class);
-    private static final String WORKLOAD_QUEUE = "trainer.workload.queue";
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, UserService userService,
                           MeterRegistry meterRegistry, TrainingTypeService trainingTypeService,
-                          ModelMapper modelMapper, JmsTemplate jmsTemplate) {
+                          ModelMapper modelMapper, QueueMessagingTemplate queueMessagingTemplate) {
         this.trainerRepository = trainerRepository;
         this.userService = userService;
         this.trainingTypeService = trainingTypeService;
         this.modelMapper = modelMapper;
-        this.jmsTemplate = jmsTemplate;
+        this.queueMessagingTemplate = queueMessagingTemplate;
 
         Gauge.builder("custom.trainer.count", trainerRepository, TrainerRepository::count)
                 .register(meterRegistry);
@@ -153,10 +154,7 @@ public class TrainerService {
         LOGGER.info("TX ID: {} — Sending a '{}' request to 'trainer-workload' microservice for '{}' trainer...",
                 txID, action, trainer.getUsername());
 
-        jmsTemplate.convertAndSend(WORKLOAD_QUEUE, requestDTO, message -> {
-            message.setStringProperty("txID", txID);
-            return message;
-        });
+        queueMessagingTemplate.convertAndSend(WORKLOAD_QUEUE, requestDTO, Map.of("txID", txID));
     }
 
     public void updateTrainerWorkloadFallback(String txID, Training training,
